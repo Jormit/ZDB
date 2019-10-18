@@ -19,5 +19,13 @@ disas [func]   - displays disassembly of specified function.
 q              - quits program.
 help           - shows this screen.
 ```
+## TODO
+- Add arrows to show branches of jump instructions (like radare2).
+- Parsing instructions to extract variables.
+- Automatically show info on break.
+- Print status of cpu flags.
+- Inspect data function.
+- Refactoring.
+
 ## Example.
 ![](img/disas.png)
