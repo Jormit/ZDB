@@ -1,0 +1,266 @@
+#include "debugger.h"
+#include "elf-parser.h"
+#include "colors.h"
+#include <string.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <stdlib.h>
+
+int terminal(char *argv[]);
+int open_for_analysis(int32_t *fd, char *argv[]);
+void print_banner();
+int parse_option(char *argument);
+void print_help();
+
+// Defines for options.
+#define RUN         0
+#define QUIT        1
+#define CONT        2
+#define STEP        3
+#define STACK       4
+#define REGS        5
+#define SHOW_BREAKS 6
+#define SET_BREAK   7
+#define HEADER      8
+#define SYMBOLS     9
+#define SECTIONS   10
+#define FUNCTIONS  11
+#define HELP       12 
+#define INVALID    13
+#define DISAS      14
+
+
+int main(int argc, char *argv[]){
+	// Must have a program to execute on.
+	if (argc == 1){
+		printf("Usage: ./debugger program args...\n");
+		return 1;
+	}
+	// Start the main terminal.
+	terminal(argv);
+}
+
+int terminal(char *argv[]) {
+	char argument[100];	
+
+	int tracee_status = not_running;
+	struct user_regs_struct regs;
+	pid_t pid;
+	int running = 1;
+	struct head bp_head;
+	bp_head.list = NULL;
+
+	// Needed to open elf for analysis.
+	int32_t fd;
+	Elf32_Ehdr eh;
+	Elf64_Ehdr eh64;
+	Elf64_Shdr* sh_tbl;
+
+	// If file exists, get elf headers.
+	if (open_for_analysis(&fd, argv)){
+	} else { return 1; }
+
+	read_elf_header(fd, &eh);
+	if(!is_ELF(eh)) { return 1; }
+
+	// We only debug 64 bit atm.
+	if(is64Bit(eh)){
+		read_elf_header64(fd, &eh64);
+		sh_tbl = malloc(eh64.e_shentsize * eh64.e_shnum);
+		read_section_header_table64(fd, eh64, sh_tbl);		
+
+	} else {
+		printf(CYN"[x] Elf file is not 64 bits.\n");
+		return 1;
+	}
+
+	// It's on.
+	print_banner();
+
+
+	run(argv, &pid, &regs, &tracee_status, &bp_head);
+	while (1) {
+		if(tracee_status == not_running){
+			printf(WHT"[0x00000000]> ");
+		} 
+		else if (tracee_status == at_break){
+			printf(WHT"[0x%llx]> ", regs.rip);
+		}
+
+		// Read in argument.
+		fgets(argument, 100, stdin);
+		strtok(argument, "\n");
+
+		char temp[100];
+		char command[100];
+
+		strcpy(temp, argument);
+		sscanf(temp, "%s ", command);
+
+		struct search_term result;
+
+		char *ptr;
+		long number = 0;
+		char amount[100] = {0};
+
+		switch (parse_option(command)){
+			case RUN:
+				run(argv, &pid, &regs, &tracee_status, &bp_head);
+				cont(pid, &regs, &tracee_status, &bp_head);
+			break;
+
+			case QUIT:
+				kill(pid, SIGKILL);
+				exit(1);
+			break;
+
+			case CONT:
+				if (tracee_status == not_running){
+				printf(CYN"[x] Process not started yet. \n");
+				} else {
+					cont(pid, &regs, &tracee_status, &bp_head);
+				}
+				run(argv, &pid, &regs, &tracee_status, &bp_head);
+			break;
+
+			case STEP:
+				cont_ss(pid, &regs, &tracee_status, &bp_head);
+			break;
+
+			case STACK:
+				sscanf(temp, "%s %s", argument, amount);
+				number = strtoul(amount, &ptr, 10); 
+				if (number != 0){
+					print_stack(pid, regs.rsp, number);
+				} else {
+					print_stack(pid, regs.rsp, 10);
+				}
+			break;
+
+			case REGS:
+				print_registers(&regs);
+			break;
+
+			case SHOW_BREAKS:
+				print_all_breaks(&bp_head);
+			break;
+
+			case SET_BREAK:
+				if (sscanf(temp, "%s %s", argument, amount) == 1){
+					printf(CYN"[!] Memory address required.\n");
+					break;
+				}				
+				number = strtoul(amount, &ptr, 16);
+				if(number == 0){
+					result = search_funcs64(fd, eh64, sh_tbl, amount);
+					if (result.size != 0){
+						add_breakpoint(result.address, &bp_head);
+						set_breakpoint(pid, result.address);
+					} else {
+						printf(CYN"[!] Invalid address/function.\n");
+					}
+					
+				} else {
+					add_breakpoint(number, &bp_head);
+					set_breakpoint(pid, number);
+				}
+			break;
+
+			case DISAS:				
+				if (sscanf(temp, "%s %s", argument, amount) == 1){
+					printf(CYN"[!] Memory address/function required.\n");
+					break;
+				}
+				sscanf(temp, "%s %s", argument, amount);					
+				result = search_funcs64(fd, eh64, sh_tbl, amount);
+				if (result.size != 0){
+					printf(RESET CYN"Disassembly of <%s>\n", amount);
+					disas(pid, result.size, result.address, fd, eh64, sh_tbl, regs.rip);
+				} else {
+					printf(CYN"[!] Invalid address/function.\n");
+				}								
+			break;
+
+			case HEADER:
+				print_elf_header64(eh64);
+			break;
+
+			case SYMBOLS: // Remove later pls.
+				print_symbols64(fd, eh64, sh_tbl);
+			break;
+
+			case SECTIONS:
+				print_section_headers64(fd, eh64, sh_tbl);
+			break;
+
+			case FUNCTIONS:
+				print_funcs64(fd, eh64, sh_tbl);
+			break;
+
+			case HELP:
+				print_help();
+			break;
+
+			case INVALID:
+				printf(CYN"[x] Invalid command\n");
+			break;
+		}
+
+	}
+}
+
+int parse_option(char *argument){
+	// Compare arguments.
+	if      (strcmp(argument, "r"     ) == 0) { return RUN;        } 
+	else if (strcmp(argument, "q"     ) == 0) { return QUIT;       } 
+	else if (strcmp(argument, "c"     ) == 0) { return CONT;       } 
+	else if (strcmp(argument, "s"     ) == 0) { return STEP;       } 
+	else if (strcmp(argument, "stack" ) == 0) { return STACK;      } 
+	else if (strcmp(argument, "regs"  ) == 0) { return REGS;       } 
+	else if (strcmp(argument, "breaks") == 0) { return SHOW_BREAKS;}
+	else if (strcmp(argument, "b"     ) == 0) { return SET_BREAK;  }
+	else if (strcmp(argument, "header") == 0) { return HEADER;     } 
+	else if (strcmp(argument, "symb"  ) == 0) { return SYMBOLS;    } 
+	else if (strcmp(argument, "sect"  ) == 0) { return SECTIONS;   }
+	else if (strcmp(argument, "func"  ) == 0) { return FUNCTIONS;  } 
+	else if (strcmp(argument, "help"  ) == 0) { return HELP;       }
+	else if (strcmp(argument, "disas" ) == 0) { return DISAS;      }
+	else                                      { return INVALID;    }
+}
+
+
+int open_for_analysis(int32_t *fd, char *argv[]){	
+	*fd = open(argv[1], O_RDONLY|O_SYNC);
+	if(fd < 0) {
+		printf("[x] Unable to open %s\n", argv[1]);
+		return 0;
+	}
+	return 1;
+}
+
+void print_banner(){
+	printf(WHT"	_ _     \n");
+	printf("       | | |    \n");
+	printf(" ______| | |__  \n");
+	printf("|_  / _` | '_ \\ \n");
+	printf(" / / (_| | |_) |\n");
+	printf("/___\\__,_|_.__/ \n"); 
+	printf(GRN"Type \"help\" for more info.\n");
+	return;
+}
+
+void print_help(){
+	printf(GRN"zdb - A simple 64 bit elf debugger.\n");
+	printf(GRN"Commands:\n");
+	printf(GRN"r"DGR"              - starts/restarts execution.\n");
+	printf(GRN"c"DGR"              - continues execution until end or breakpoint.\n");
+	printf(GRN"b [addr/func]"DGR"  - sets break at specified address.\n"); 
+	printf(GRN"breaks"DGR"         - shows set breakpoints.\n");
+	printf(GRN"stack [amount]"DGR" - displays stackdump of [amount] length.\n");
+	printf(GRN"regs"DGR"           - displays register values.\n");
+	printf(GRN"sect"DGR"           - displays elf sections.\n");
+	printf(GRN"func"DGR"           - displays binary functions.\n");
+	printf(GRN"disas [func]"DGR"   - displays disassembly of specified function.\n");
+	printf(GRN"q"DGR"              - quits program.\n");
+	return;
+}
