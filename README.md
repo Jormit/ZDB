@@ -18,4 +18,4 @@ q              - quits program.
 help           - shows this screen.
 ```
 ## Example.
-
+![](img/disas.png)
