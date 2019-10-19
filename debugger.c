@@ -38,9 +38,9 @@ void start_debugger(pid_t pid, struct user_regs_struct *regs, int *tracee_status
 	return;
 }
 
-void disas(pid_t pid, int length, long location, int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], long rip) {	
+void disas(pid_t pid, int length, long location, int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], long rip, char *raw_file) {	
 	//#define CODE "\x55\x48\x8b\x05\xb8\x13\x00\x00"
-
+	
 	char *code = malloc(sizeof(long) * (length));
 
 	for (int i = 0; i < (length); i++){
@@ -57,7 +57,9 @@ void disas(pid_t pid, int length, long location, int32_t fd, Elf64_Ehdr eh, Elf6
 		return;
 	}
 
-	count = cs_disasm(handle, (unsigned char *)code, length, location, 0, &insn);
+	long real_loc = location - 0x400000;
+
+	count = cs_disasm(handle, &(((unsigned char *)raw_file)[real_loc]), length, location, 0, &insn);
 	if (count) {
 		size_t j;
 		for (j = 0; j < count; j++) {
@@ -111,7 +113,7 @@ void disas(pid_t pid, int length, long location, int32_t fd, Elf64_Ehdr eh, Elf6
 
 	cs_close(&handle);
 
-	free(code);
+	//free(code);
 
     return;
 }
@@ -142,7 +144,7 @@ void cont_ss(pid_t pid, struct user_regs_struct *regs, int *tracee_status, struc
 	ptrace(PTRACE_GETREGS, pid, 0, regs);
 }
 
-void add_breakpoint(long long unsigned int address, struct head *bp_head){
+struct breakpoint *add_breakpoint(long long unsigned int address, struct head *bp_head){
 	printf(CYN"[!] Break set at 0x%llx\n", address);	
 	struct breakpoint *new = malloc(sizeof(struct breakpoint));
 	new->next = NULL;
@@ -157,6 +159,7 @@ void add_breakpoint(long long unsigned int address, struct head *bp_head){
 		} 
 		curr->next = new;
 	}
+	return new;
 
 }
 

@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 int terminal(char *argv[]);
-int open_for_analysis(int32_t *fd, char *argv[]);
+int open_for_analysis(int32_t *fd, char *argv[], char *raw_file);
 void print_banner();
 int parse_option(char *argument);
 void print_help();
@@ -56,9 +56,26 @@ int terminal(char *argv[]) {
 	Elf64_Ehdr eh64;
 	Elf64_Shdr* sh_tbl;
 
-	// If file exists, get elf headers.
-	if (open_for_analysis(&fd, argv)){
+	// Store the raw file.
+	char *raw_file = NULL;
+
+	// If file exists get pointer to it for elf analysis.
+	if (open_for_analysis(&fd, argv, raw_file)){
 	} else { return 1; }
+
+	// Open up the raw file.
+	FILE *f = fopen(argv[1], "rb");
+	fseek(f, 0, SEEK_END);
+	long fsize = ftell(f);
+	fseek(f, 0, SEEK_SET);  /* same as rewind(f); */
+
+	raw_file = malloc(fsize + 1);
+	fread(raw_file, 1, fsize, f);
+	fclose(f);
+
+	raw_file[fsize] = 0;
+
+	printf("%s", (unsigned char *)&raw_file[0x4d0]);
 
 	read_elf_header(fd, &eh);
 	if(!is_ELF(eh)) { return 1; }
@@ -103,6 +120,8 @@ int terminal(char *argv[]) {
 		long number = 0;
 		char amount[100] = {0};
 
+		struct breakpoint *new;
+
 		switch (parse_option(command)){
 			case RUN:
 				run(argv, &pid, &regs, &tracee_status, &bp_head);
@@ -120,7 +139,7 @@ int terminal(char *argv[]) {
 				} else {
 					cont(pid, &regs, &tracee_status, &bp_head);
 				}
-				run(argv, &pid, &regs, &tracee_status, &bp_head);
+				//run(argv, &pid, &regs, &tracee_status, &bp_head);
 			break;
 
 			case STEP:
@@ -154,15 +173,15 @@ int terminal(char *argv[]) {
 				if(number == 0){
 					result = search_funcs64(fd, eh64, sh_tbl, amount);
 					if (result.size != 0){
-						add_breakpoint(result.address, &bp_head);
-						set_breakpoint(pid, result.address);
+						new = add_breakpoint(result.address, &bp_head);
+						new->old_data = set_breakpoint(pid, result.address);
 					} else {
 						printf(CYN"[!] Invalid address/function.\n");
 					}
 					
 				} else {
-					add_breakpoint(number, &bp_head);
-					set_breakpoint(pid, number);
+					new = add_breakpoint(number, &bp_head);
+					new->old_data = set_breakpoint(pid, number);
 				}
 			break;
 
@@ -175,7 +194,7 @@ int terminal(char *argv[]) {
 				result = search_funcs64(fd, eh64, sh_tbl, amount);
 				if (result.size != 0){
 					printf(RESET CYN"Disassembly of <%s>\n", amount);
-					disas(pid, result.size, result.address, fd, eh64, sh_tbl, regs.rip);
+					disas(pid, result.size, result.address, fd, eh64, sh_tbl, regs.rip, raw_file);
 				} else {
 					printf(CYN"[!] Invalid address/function.\n");
 				}								
@@ -229,12 +248,14 @@ int parse_option(char *argument){
 }
 
 
-int open_for_analysis(int32_t *fd, char *argv[]){	
+int open_for_analysis(int32_t *fd, char *argv[], char *raw_file){	
 	*fd = open(argv[1], O_RDONLY|O_SYNC);
+	
 	if(fd < 0) {
 		printf("[x] Unable to open %s\n", argv[1]);
 		return 0;
-	}
+	} 
+
 	return 1;
 }
 
