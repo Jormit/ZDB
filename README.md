@@ -25,7 +25,13 @@ help           - shows this screen.
 - Automatically show info on break.
 - Print status of cpu flags.
 - Inspect data function.
-- Refactoring.
+- Deletion of breakpoints.
+- Write mode (session only and to disk).
+- Editing registers during running.
+- Disas at arbitary addresses.
+- Raw hex dumps.
+- Refactoring for extensibility.
+- 32 bit.
 
 ## Example.
 ![](img/disas.png)
