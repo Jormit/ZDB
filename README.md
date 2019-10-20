@@ -32,6 +32,10 @@ help           - shows this screen.
 - Raw hex dumps.
 - Refactoring for extensibility.
 - 32 bit.
+- Cleaner commands.
+- Disas at any address (only function names atm).
+- Switch disas mode between memory and disk (So code that decrypts itself can be analysed.).
+- Arbitarily control excecution location.
 
 ## Example.
 ![](img/disas.png)
