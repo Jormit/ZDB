@@ -28,7 +28,6 @@ help           - shows this screen.
 - Deletion of breakpoints.
 - Write mode (session only and to disk).
 - Editing registers during running.
-- Disas at arbitary addresses.
 - Raw hex dumps.
 - Refactoring for extensibility.
 - 32 bit.
