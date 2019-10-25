@@ -1,17 +1,7 @@
 #pragma once
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/reg.h>
-#include <sys/wait.h>
-#include <sys/ptrace.h>
-#include <sys/types.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <sys/user.h>
-#include <string.h>
-#include <inttypes.h>
-#include "elf-parser.h"
 
+#include "elf-parser.h"
+#include <sys/user.h>
 #include <capstone/capstone.h>
 
 // Possible states debugger can be in.

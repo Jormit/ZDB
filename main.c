@@ -1,16 +1,20 @@
 #include "debugger.h"
 #include "elf-parser.h"
 #include "colors.h"
+
 #include <string.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <stdlib.h>
+#include <fcntl.h>
+#include <signal.h>
 
 int terminal(char *argv[]);
-int open_for_analysis(int32_t *fd, char *argv[], char *raw_file);
+int open_for_analysis(int32_t *fd, char *argv[]);
 void print_banner();
 int parse_option(char *argument);
 void print_help();
+char *get_raw(char *argv[]);
 
 // Defines for options.
 #define RUN         0
@@ -56,26 +60,15 @@ int terminal(char *argv[]) {
 	Elf64_Ehdr eh64;
 	Elf64_Shdr* sh_tbl;
 
-	// Store the raw file.
-	char *raw_file = NULL;
+	// Open up the raw file used for disas.
+	char *raw_file = get_raw(argv);
+	if (raw_file == NULL){
+		printf(CYN"[x] Could not open file.\n");
+	}	
 
 	// If file exists get pointer to it for elf analysis.
-	if (open_for_analysis(&fd, argv, raw_file)){
+	if (open_for_analysis(&fd, argv)){
 	} else { return 1; }
-
-	// Open up the raw file.
-	FILE *f = fopen(argv[1], "rb");
-	fseek(f, 0, SEEK_END);
-	long fsize = ftell(f);
-	fseek(f, 0, SEEK_SET);  /* same as rewind(f); */
-
-	raw_file = malloc(fsize + 1);
-	fread(raw_file, 1, fsize, f);
-	fclose(f);
-
-	raw_file[fsize] = 0;
-
-	printf("%s", (unsigned char *)&raw_file[0x4d0]);
 
 	read_elf_header(fd, &eh);
 	if(!is_ELF(eh)) { return 1; }
@@ -91,7 +84,8 @@ int terminal(char *argv[]) {
 		return 1;
 	}
 
-	// It's on.
+	// Everything is ok -_-
+	// Lets start.
 	print_banner();
 
 
@@ -248,7 +242,7 @@ int parse_option(char *argument){
 }
 
 
-int open_for_analysis(int32_t *fd, char *argv[], char *raw_file){	
+int open_for_analysis(int32_t *fd, char *argv[]){	
 	*fd = open(argv[1], O_RDONLY|O_SYNC);
 	
 	if(fd < 0) {
@@ -284,4 +278,18 @@ void print_help(){
 	printf(GRN"disas [func]"DGR"   - displays disassembly of specified function.\n");
 	printf(GRN"q"DGR"              - quits program.\n");
 	return;
+}
+
+char *get_raw(char *argv[]) {
+	// Store the raw file.
+	char *raw_file = NULL;
+	FILE *f = fopen(argv[1], "rb");
+	fseek(f, 0, SEEK_END);
+	long fsize = ftell(f);
+	fseek(f, 0, SEEK_SET);
+	raw_file = malloc(fsize + 1);
+	fread(raw_file, 1, fsize, f);
+	fclose(f);
+	raw_file[fsize] = 0;
+	return raw_file;
 }

@@ -1,5 +1,18 @@
-#include "debugger.h"
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/reg.h>
+#include <sys/wait.h>
+#include <sys/ptrace.h>
+#include <sys/types.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <sys/user.h>
+#include <string.h>
+#include <inttypes.h>
+
 #include "colors.h"
+#include "elf-parser.h"
+#include "debugger.h"
 
 void run(char *argv[], pid_t *pid, struct user_regs_struct *regs, int *tracee_status, struct head *bp_head){
 	int status;	
