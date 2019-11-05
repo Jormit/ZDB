@@ -38,3 +38,4 @@ help           - shows this screen.
 
 ## Example.
 ![](img/disas.png)
+![](img/hex.png)
