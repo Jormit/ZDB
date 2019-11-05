@@ -32,6 +32,7 @@ char *get_raw(char *argv[]);
 #define HELP       12 
 #define INVALID    13
 #define DISAS      14
+#define HEX        15
 
 
 int main(int argc, char *argv[]){
@@ -181,17 +182,50 @@ int terminal(char *argv[]) {
 
 			case DISAS:				
 				if (sscanf(temp, "%s %s", argument, amount) == 1){
-					printf(CYN"[!] Memory address/function required.\n");
-					break;
-				}
-				sscanf(temp, "%s %s", argument, amount);					
-				result = search_funcs64(fd, eh64, sh_tbl, amount);
-				if (result.size != 0){
-					printf(RESET CYN"Disassembly of <%s>\n", amount);
-					disas(pid, result.size, result.address, fd, eh64, sh_tbl, regs.rip, raw_file);
+					if (tracee_status == not_running){
+						printf(CYN"[!] Can't disassemble here!\n");
+					} else {
+						disas(pid, 0x30, regs.rip, fd, eh64, sh_tbl, regs.rip, raw_file);
+					}					
 				} else {
-					printf(CYN"[!] Invalid address/function.\n");
-				}								
+					number = strtoul(amount, &ptr, 16);
+					if (number == 0){
+						sscanf(temp, "%s %s", argument, amount);					
+						result = search_funcs64(fd, eh64, sh_tbl, amount);
+						if (result.size != 0){
+							printf(RESET CYN"Disassembly of %s\n", amount);
+							disas(pid, result.size, result.address, fd, eh64, sh_tbl, regs.rip, raw_file);
+						} else {
+							printf(CYN"[!] Invalid address/function.\n");
+						}
+					} else {
+						disas(pid, 0x80, number, fd, eh64, sh_tbl, regs.rip, raw_file);
+					}
+				}											
+			break;
+
+			case HEX:				
+				if (sscanf(temp, "%s %s", argument, amount) == 1){
+					if (tracee_status == not_running){
+						printf(CYN"[!] Can't disassemble here!\n");
+					} else {
+						hex(pid, 0x30, regs.rip, fd, eh64, sh_tbl, regs.rip, raw_file);
+					}					
+				} else {
+					number = strtoul(amount, &ptr, 16);
+					if (number == 0){
+						sscanf(temp, "%s %s", argument, amount);					
+						result = search_funcs64(fd, eh64, sh_tbl, amount);
+						if (result.size != 0){
+							printf(RESET CYN"Hexdump of %s\n", amount);
+							hex(pid, result.size, result.address, fd, eh64, sh_tbl, regs.rip, raw_file);
+						} else {
+							printf(CYN"[!] Invalid address/function.\n");
+						}
+					} else {
+						hex(pid, 0x80, number, fd, eh64, sh_tbl, regs.rip, raw_file);
+					}
+				}											
 			break;
 
 			case HEADER:
@@ -238,6 +272,7 @@ int parse_option(char *argument){
 	else if (strcmp(argument, "func"  ) == 0) { return FUNCTIONS;  } 
 	else if (strcmp(argument, "help"  ) == 0) { return HELP;       }
 	else if (strcmp(argument, "disas" ) == 0) { return DISAS;      }
+	else if (strcmp(argument, "hex"   ) == 0) { return HEX;        }
 	else                                      { return INVALID;    }
 }
 

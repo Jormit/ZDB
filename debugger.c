@@ -9,6 +9,8 @@
 #include <sys/user.h>
 #include <string.h>
 #include <inttypes.h>
+#include <stdint.h>
+#include <ctype.h>
 
 #include "colors.h"
 #include "elf-parser.h"
@@ -129,6 +131,27 @@ void disas(pid_t pid, int length, long location, int32_t fd, Elf64_Ehdr eh, Elf6
 	//free(code);
 
     return;
+}
+
+void hex(pid_t pid, int length, long location, int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], long rip, char *raw_file){
+	long real_loc = location - 0x400000;
+	for (int i = 0; i < length; i+=16){
+		printf(DGR"%016lx: ", location + i);		
+
+		for (int s = 0; s < 8; s++){
+			printf(WHT"%02x" , (uint8_t)raw_file[i + real_loc + s*2]);
+			printf(WHT"%02x ", (uint8_t)raw_file[i + real_loc + s*2+1]);
+		}
+
+		for (int s = 0; s < 16; s++){
+			if (isprint((uint8_t)raw_file[i + real_loc + s])){
+				putchar((uint8_t)raw_file[i + real_loc + s]);
+			} else {
+				putchar('.');
+			}			
+		}		
+		printf("\n");
+	}
 }
 
 void cont(pid_t pid, struct user_regs_struct *regs, int *tracee_status, struct head *bp_head) {

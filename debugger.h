@@ -37,7 +37,9 @@ long set_breakpoint(pid_t pid, long addr);
 void unset_breakpoint(pid_t pid, long addr, long old_data);
 void set_all_breaks(pid_t pid, struct head *bp_head);
 
+// Analysis
 void disas(pid_t pid, int length, long location, int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], long rip, char *raw_file);
+void hex(pid_t pid, int length, long location, int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], long rip, char *raw_file);
 
 // Movement functions.
 void run(char *argv[], pid_t *pid, struct user_regs_struct *regs, int *tracee_status, struct head *bp_head);
@@ -48,3 +50,4 @@ void cont_ss(pid_t pid, struct user_regs_struct *regs, int *tracee_status, struc
 void print_registers(struct user_regs_struct *regs);
 void print_stack(pid_t pid, long sp, long amount);
 void print_all_breaks(struct head *bp_head);
+
