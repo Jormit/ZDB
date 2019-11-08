@@ -28,11 +28,9 @@ help           - shows this screen.
 - Deletion of breakpoints.
 - Write mode (session only and to disk).
 - Editing registers during running.
-- Raw hex dumps.
 - Refactoring for extensibility.
 - 32 bit.
 - Cleaner commands.
-- Disas at any address (only function names atm).
 - Switch disas mode between memory and disk (So code that decrypts itself can be analysed.).
 - Arbitarily control excecution location.
 
