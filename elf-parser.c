@@ -290,12 +290,10 @@ void print_func_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], uint32
 	plt_count = (sh_table[plt_table].sh_size/sizeof(Elf64_Rela));
 	symbol_count = (sh_table[symbol_table].sh_size/sizeof(Elf64_Sym));
 
-	printf(RED"%d symbols\n", symbol_count);
-
 	if (plt_table) {
-		printf(CYN".got       .plt         symbol_name\n");
+		printf(CYN"\n.got       .plt         symbol_name\n");
 	} else {
-		printf(CYN"address      symbol_name\n");
+		printf(CYN"\naddress      symbol_name\n");
 	}
 
 	for(i=0; i< symbol_count; i++) {

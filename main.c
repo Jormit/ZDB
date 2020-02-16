@@ -300,18 +300,19 @@ void print_banner(){
 }
 
 void print_help(){
-	printf(GRN"zdb - A simple 64 bit elf debugger.\n");
+	printf(DGR"zdb - A simple 64 bit elf debugger.\n");
 	printf(GRN"Commands:\n");
-	printf(GRN"r"DGR"              - starts/restarts execution.\n");
-	printf(GRN"c"DGR"              - continues execution until end or breakpoint.\n");
-	printf(GRN"b [addr/func]"DGR"  - sets break at specified address.\n"); 
-	printf(GRN"breaks"DGR"         - shows set breakpoints.\n");
-	printf(GRN"stack [amount]"DGR" - displays stackdump of [amount] length.\n");
-	printf(GRN"regs"DGR"           - displays register values.\n");
-	printf(GRN"sect"DGR"           - displays elf sections.\n");
-	printf(GRN"func"DGR"           - displays binary functions.\n");
-	printf(GRN"disas [func]"DGR"   - displays disassembly of specified function.\n");
-	printf(GRN"q"DGR"              - quits program.\n");
+	printf(GRN"r"DGR"                 - starts/restarts execution.\n");
+	printf(GRN"c"DGR"                 - continues execution until end or breakpoint.\n");
+	printf(GRN"b [addr/func]"DGR"     - sets break at specified address.\n"); 
+	printf(GRN"breaks"DGR"            - shows set breakpoints.\n");
+	printf(GRN"stack [amount]"DGR"    - displays stackdump of [amount] length.\n");
+	printf(GRN"regs"DGR"              - displays register values.\n");
+	printf(GRN"sect"DGR"              - displays elf sections.\n");
+	printf(GRN"func"DGR"              - displays binary functions.\n");
+	printf(GRN"disas [func/addr]"DGR" - displays disassembly of specified area.\n");
+	printf(GRN"hex [func/addr]"DGR"   - displays hexdump of specified area.\n");
+	printf(GRN"q"DGR"                 - quits program.\n");
 	return;
 }
 
