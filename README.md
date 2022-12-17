@@ -1,7 +1,7 @@
 ## zdb 
 zdb is a work in progress debugger for 64 bit elf binaries aiming to provide an experience similar to gdb. At the moment the debugger supports setting breakpoints and stepping, dissassembly with function and string info (via capstone) and showing the stack and the registers. Elf parsing extended on code from https://github.com/TheCodeArtist/elf-parser/blob/master/elf-parser.c to add .plt and .got address resolution.
 
-## How to use.
+## How To Use
 This is only for linux and you must have capstone installed on your computer. See http://www.capstone-engine.org/. </br>
 To compile run `make`. </br></br>
 These are the currently supported commands.
@@ -19,7 +19,7 @@ disas [func/addr] - displays disassembly of specified area.
 hex [func/addr]   - displays hexdump of specified area.
 q                 - quits program.
 ```
-## TODO
+## Todo
 - Add arrows to show branches of jump instructions (like radare2).
 - Parsing instructions to extract variables.
 - Automatically show info on break.
@@ -34,6 +34,6 @@ q                 - quits program.
 - Switch disas mode between memory and disk (So code that decrypts itself can be analysed.).
 - Arbitarily control excecution location.
 
-## Example.
+## Example
 ![](img/disas.png)
 ![](img/hex.png)
