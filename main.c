@@ -126,7 +126,6 @@ int terminal(char *argv[]) {
       } else {
         cont(pid, &regs, &tracee_status, &bp_head);
       }
-      // run(argv, &pid, &regs, &tracee_status, &bp_head);
       break;
 
     case STEP:

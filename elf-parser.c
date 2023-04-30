@@ -200,10 +200,10 @@ char *read_section64(int32_t fd, Elf64_Shdr sh) {
 
 void print_section_headers64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
   char *sh_str = read_section64(fd, sh_table[eh.e_shstrndx]);
-  printf(CYN "load-addr  size       section\n");
+  printf(CYN "load-addr          size               section\n");
   for (uint32_t i = 0; i < eh.e_shnum; i++) {
-    printf(DGR "0x%08lx ", sh_table[i].sh_addr);
-    printf(DGR "0x%08lx | ", sh_table[i].sh_size);
+    printf(DGR "0x%016lx ", sh_table[i].sh_addr);
+    printf(DGR "0x%016lx ", sh_table[i].sh_size);
     printf(WHT "%s\t", (sh_str + sh_table[i].sh_name));
     printf("\n");
   }
@@ -212,6 +212,7 @@ void print_section_headers64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
 
 void print_rela_tables64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
                          unsigned char type) {
+  printf(CYN "load-addr          name\n");
   for (uint32_t i = 0; i < eh.e_shnum; i++) {
     if (sh_table[i].sh_type == SHT_RELA) {
       print_rela_table64(fd, eh, sh_table, type, i);
@@ -241,8 +242,8 @@ void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
     unsigned char sym_type =
         ELF64_ST_TYPE(dynsym_tbl[ELF64_R_SYM(rela_tbl[i].r_info)].st_info);
     if (name_index && (type == STT_NOTYPE || type == sym_type)) {
-      printf("0x%08lx ", rela_tbl[i].r_offset);
-      printf("%s\n", str_tbl + name_index);
+      printf(DGR "0x%016lx ", rela_tbl[i].r_offset);
+      printf(WHT "%s\n", str_tbl + name_index);
     }
   }
 
@@ -253,6 +254,7 @@ void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
 
 void print_syms_tables64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
                          unsigned char type) {
+  printf(CYN "load-addr          name\n");
   for (uint32_t i = 0; i < eh.e_shnum; i++) {
     if (sh_table[i].sh_type == SHT_SYMTAB) {
       print_syms_table64(fd, eh, sh_table, type, i);
@@ -262,6 +264,7 @@ void print_syms_tables64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
 
 void print_dynsyms_tables64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
                             unsigned char type) {
+  printf(CYN "load-addr          name\n");
   for (uint32_t i = 0; i < eh.e_shnum; i++) {
     if (sh_table[i].sh_type == SHT_DYNSYM) {
       print_syms_table64(fd, eh, sh_table, type, i);
@@ -282,8 +285,8 @@ void print_syms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
     uint32_t name_index = syms_tbl[i].st_name;
     unsigned char sym_type = ELF64_ST_TYPE(syms_tbl[i].st_info);
     if (name_index && (type == STT_NOTYPE || type == sym_type)) {
-      printf("0x%08lx ", syms_tbl[i].st_value);
-      printf("%s\n", (str_tbl + name_index));
+      printf(DGR "0x%016lx ", syms_tbl[i].st_value);
+      printf(WHT "%s\n", (str_tbl + name_index));
     }
   }
   free(syms_tbl);
