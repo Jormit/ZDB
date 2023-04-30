@@ -33,6 +33,7 @@ void print_section_headers64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]);
 void print_symbol_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
                           uint32_t symbol_table);
 void print_symbols64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]);
+void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]);
 
 // Searching For functions by name.
 struct search_term search_funcs64(int32_t fd, Elf64_Ehdr eh,

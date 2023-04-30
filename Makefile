@@ -1,5 +1,5 @@
 debugger: debugger.c main.c elf-parser.c test
-	clang -o debugger debugger.c main.c elf-parser.c -lcapstone -Wall
+	clang -o debugger debugger.c main.c elf-parser.c -lcapstone -Wall -g
 
 test: test.c
 	clang -o test test.c

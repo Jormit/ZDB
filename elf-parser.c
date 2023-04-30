@@ -223,6 +223,33 @@ void print_section_headers64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
   } /* end of section header table */
 }
 
+void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
+  uint32_t rela_tbl_index = 0;                          
+  for (uint32_t i = 0; i < eh.e_shnum; i++) {
+    if (sh_table[i].sh_type == SHT_RELA) {
+      rela_tbl_index = i;
+    }
+  }
+  Elf64_Rela *rela_tbl = (Elf64_Rela *)read_section64(fd, sh_table[rela_tbl_index]);
+  uint32_t dynsym_index = 0;
+  for (uint32_t i = 0; i < eh.e_shnum; i++) {
+    if (sh_table[i].sh_type == SHT_DYNSYM) {
+      dynsym_index = i;
+      break;
+    }
+  }
+  Elf64_Sym *dynsym_tbl = (Elf64_Sym *)read_section64(fd, sh_table[dynsym_index]);
+  char *str_tbl = read_section64(fd, sh_table[sh_table[dynsym_index].sh_link]);
+  uint32_t symbol_count = (sh_table[rela_tbl_index].sh_size / sizeof(Elf64_Rela));
+
+  printf("%u\n", symbol_count);
+
+  for (uint32_t i = 0; i < symbol_count; i++) {
+       printf("0x%08lx ", rela_tbl[i].r_offset);
+       printf("%s\n", (str_tbl + dynsym_tbl[ELF64_R_SYM (rela_tbl[i].r_info)].st_name));
+  }
+}
+
 void print_symbol_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
                           uint32_t symbol_table) {
   char *str_tbl;
@@ -246,13 +273,9 @@ void print_symbol_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
 }
 
 void print_symbols64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
-  uint32_t i;
-  // char* sh_str = read_section64(fd, sh_table[eh.e_shstrndx]);
-
-  for (i = 0; i < eh.e_shnum; i++) {
+  for (uint32_t i = 0; i < eh.e_shnum; i++) {
     if (sh_table[i].sh_type == SHT_SYMTAB ||
         sh_table[i].sh_type == SHT_DYNSYM) {
-      // printf("%s\n", (sh_str + sh_table[i].sh_name));
       print_symbol_table64(fd, eh, sh_table, i);
     }
   }
@@ -275,7 +298,6 @@ void print_func_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
   }
 
   uint32_t str_tbl_ndx = sh_table[symbol_table].sh_link;
-  // debug("str_table_ndx = 0x%x\n", str_tbl_ndx);
   str_tbl = read_section64(fd, sh_table[str_tbl_ndx]);
 
   plt_count = (sh_table[plt_table].sh_size / sizeof(Elf64_Rela));
@@ -296,8 +318,6 @@ void print_func_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
     if (plt_table == 0) {
       printf(DGR "0x%08lx | ", sym_tbl[i].st_value);
     }
-    // printf("0x%02x ", ELF32_ST_BIND(sym_tbl[i].st_info));
-    // printf("0x%02x ", ELF32_ST_TYPE(sym_tbl[i].st_info));
     if (plt_table != 0 && plt_offset < plt_count && i > 0 &&
         ((ELF64_R_SYM(plt_tbl[plt_offset].r_info) == i))) {
       printf(DGR "0x%08lx ", plt_tbl[plt_offset].r_offset);

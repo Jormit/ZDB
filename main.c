@@ -33,6 +33,7 @@ char *get_raw(char *argv[]);
 #define INVALID 13
 #define DISAS 14
 #define HEX 15
+#define RELA 16
 
 int main(int argc, char *argv[]) {
   // Must have a program to execute on.
@@ -225,7 +226,7 @@ int terminal(char *argv[]) {
       print_elf_header64(eh);
       break;
 
-    case SYMBOLS: // Remove later pls.
+    case SYMBOLS:
       print_symbols64(fd, eh, sh_tbl);
       break;
 
@@ -239,6 +240,10 @@ int terminal(char *argv[]) {
 
     case HELP:
       print_help();
+      break;
+
+    case RELA:
+      print_rela_table64(fd, eh, sh_tbl);
       break;
 
     case INVALID:
@@ -280,6 +285,8 @@ int parse_option(char *argument) {
     return DISAS;
   } else if (strcmp(argument, "hex") == 0) {
     return HEX;
+  } else if (strcmp(argument, "rela") == 0) {
+    return RELA;
   } else {
     return INVALID;
   }
