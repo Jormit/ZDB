@@ -31,9 +31,13 @@ char *read_section64(int32_t fd, Elf64_Shdr sh);
 
 // Table Printing Functions
 void print_section_headers64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]);
-void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type);
-void print_syms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type);
-void print_dynsyms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type);
+
+void print_rela_tables64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type);
+void print_syms_tables64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type);
+void print_dynsyms_tables64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type);
+
+void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type, uint32_t rela_tbl_index);
+void print_syms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type, uint32_t syms_tbl_index);
 
 // Searching Functions
 struct search_result search_syms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], Elf64_Addr address, char *name);

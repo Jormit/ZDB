@@ -210,13 +210,15 @@ void print_section_headers64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
   free(sh_str);
 }
 
-void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type) {
-  uint32_t rela_tbl_index = 0;               
+void print_rela_tables64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type) {            
   for (uint32_t i = 0; i < eh.e_shnum; i++) {
     if (sh_table[i].sh_type == SHT_RELA) {
-      rela_tbl_index = i;
+      print_rela_table64(fd, eh, sh_table, type, i);
     }
   }
+}
+
+void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type, uint32_t rela_tbl_index) {  
   Elf64_Rela *rela_tbl = (Elf64_Rela *)read_section64(fd, sh_table[rela_tbl_index]);
   uint32_t dynsym_index = 0;
   for (uint32_t i = 0; i < eh.e_shnum; i++) {
@@ -243,13 +245,23 @@ void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsign
   free(str_tbl);
 }
 
-void print_syms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type) {
-  uint32_t syms_tbl_index = 0;                          
+void print_syms_tables64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type) {                 
   for (uint32_t i = 0; i < eh.e_shnum; i++) {
     if (sh_table[i].sh_type == SHT_SYMTAB) {
-      syms_tbl_index = i;
+      print_syms_table64(fd, eh, sh_table, type, i);
     }
   }
+}
+
+void print_dynsyms_tables64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type) {
+  for (uint32_t i = 0; i < eh.e_shnum; i++) {
+    if (sh_table[i].sh_type == SHT_DYNSYM) {
+      print_syms_table64(fd, eh, sh_table, type, i);
+    }
+  }
+}
+
+void print_syms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type, uint32_t syms_tbl_index) {  
   Elf64_Sym *syms_tbl = (Elf64_Sym *)read_section64(fd, sh_table[syms_tbl_index]);
   char *str_tbl = read_section64(fd, sh_table[sh_table[syms_tbl_index].sh_link]);
   uint32_t symbol_count = (sh_table[syms_tbl_index].sh_size / sizeof(Elf64_Rela));
@@ -263,29 +275,6 @@ void print_syms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsign
       }
   }
   free(syms_tbl);
-  free(str_tbl);
-}
-
-void print_dynsyms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type) {
-  uint32_t dynsyms_tbl_index = 0;                          
-  for (uint32_t i = 0; i < eh.e_shnum; i++) {
-    if (sh_table[i].sh_type == SHT_DYNSYM) {
-      dynsyms_tbl_index = i;
-    }
-  }
-  Elf64_Sym *dynsyms_tbl = (Elf64_Sym *)read_section64(fd, sh_table[dynsyms_tbl_index]);
-  char *str_tbl = read_section64(fd, sh_table[sh_table[dynsyms_tbl_index].sh_link]);
-  uint32_t symbol_count = (sh_table[dynsyms_tbl_index].sh_size / sizeof(Elf64_Rela));
-
-  for (uint32_t i = 0; i < symbol_count; i++) {
-       uint32_t name_index = dynsyms_tbl[i].st_name;
-       unsigned char sym_type = ELF64_ST_TYPE(dynsyms_tbl[i].st_info);
-       if (name_index && (type == STT_NOTYPE || type == sym_type)) {
-        printf("0x%08lx ", dynsyms_tbl[i].st_value);
-        printf("%s\n", (str_tbl + name_index));
-       }
-  }
-  free(dynsyms_tbl);
   free(str_tbl);
 }
 

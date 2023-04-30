@@ -228,9 +228,9 @@ int terminal(char *argv[]) {
 
     case SYMBOLS:
       printf("\n[Regular Symbols]\n");
-      print_syms_table64(fd, eh, sh_tbl, STT_NOTYPE);
+      print_syms_tables64(fd, eh, sh_tbl, STT_NOTYPE);
       printf("\n[Dynamic Symbols]\n");
-      print_dynsyms_table64(fd, eh, sh_tbl, STT_NOTYPE);
+      print_dynsyms_tables64(fd, eh, sh_tbl, STT_NOTYPE);
       printf("\n");
       break;
 
@@ -240,9 +240,9 @@ int terminal(char *argv[]) {
 
     case FUNCTIONS:
       printf("\n[Regular Functions]\n");
-      print_syms_table64(fd, eh, sh_tbl, STT_FUNC);
+      print_syms_tables64(fd, eh, sh_tbl, STT_FUNC);
       printf("\n[Dynamic Functions]\n");
-      print_dynsyms_table64(fd, eh, sh_tbl, STT_FUNC);
+      print_dynsyms_tables64(fd, eh, sh_tbl, STT_FUNC);
       printf("\n");
       break;
 
@@ -251,7 +251,9 @@ int terminal(char *argv[]) {
       break;
 
     case RELA:
-      print_rela_table64(fd, eh, sh_tbl, STT_NOTYPE);
+      printf("\n");
+      print_rela_tables64(fd, eh, sh_tbl, STT_NOTYPE);
+      printf("\n");
       break;
 
     case INVALID:
