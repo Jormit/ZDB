@@ -259,33 +259,36 @@ void unset_breakpoint(pid_t pid, long addr, long old_data) {
 
 // Printing functions.
 void print_registers(struct user_regs_struct *regs) {
-  printf(RED "rax:" DGR "  %llx\n", regs->rax);
-  printf(RED "rbx:" DGR "  %llx\n", regs->rbx);
-  printf(RED "rcx:" DGR "  %llx\n", regs->rcx);
-  printf(RED "rdx:" DGR "  %llx\n", regs->rdx);
-  printf(RED "rsp:" DGR "  %llx\n", regs->rsp);
-  printf(RED "rbp:" DGR "  %llx\n", regs->rbp);
-  printf(RED "rsi:" DGR "  %llx\n", regs->rsi);
-  printf(RED "rdi:" DGR "  %llx\n", regs->rdi);
-  printf(RED "rip:" DGR "  %llx\n", regs->rip);
-  printf(RED "r8 :" DGR "  %llx\n", regs->r8);
-  printf(RED "r9 :" DGR "  %llx\n", regs->r9);
-  printf(RED "r10:" DGR "  %llx\n", regs->r10);
-  printf(RED "r11:" DGR "  %llx\n", regs->r11);
-  printf(RED "r12:" DGR "  %llx\n", regs->r12);
-  printf(RED "r13:" DGR "  %llx\n", regs->r13);
-  printf(RED "r14:" DGR "  %llx\n", regs->r14);
-  printf(RED "r15:" DGR "  %llx\n", regs->r15);
+  printf("\n");
+  printf(RED "rax" DGR "       %016llx\n", regs->rax);
+  printf(RED "rbx" DGR "       %016llx\n", regs->rbx);
+  printf(RED "rcx" DGR "       %016llx\n", regs->rcx);
+  printf(RED "rdx" DGR "       %016llx\n", regs->rdx);
+  printf(RED "rsp" DGR "       %016llx\n", regs->rsp);
+  printf(RED "rbp" DGR "       %016llx\n", regs->rbp);
+  printf(RED "rsi" DGR "       %016llx\n", regs->rsi);
+  printf(RED "rdi" DGR "       %016llx\n", regs->rdi);  
+  printf(RED "r8 " DGR "       %016llx\n", regs->r8);
+  printf(RED "r9 " DGR "       %016llx\n", regs->r9);
+  printf(RED "r10" DGR "       %016llx\n", regs->r10);
+  printf(RED "r11" DGR "       %016llx\n", regs->r11);
+  printf(RED "r12" DGR "       %016llx\n", regs->r12);
+  printf(RED "r13" DGR "       %016llx\n", regs->r13);
+  printf(RED "r14" DGR "       %016llx\n", regs->r14);
+  printf(RED "r15" DGR "       %016llx\n", regs->r15);
+  printf(RED "rip" DGR "       %016llx\n", regs->rip);
+  printf("\n");
 }
 
 void print_stack(pid_t pid, long sp, long amount) {
-  // Print first with arrow for rsp then loop through desired amount.
+  printf("\n" CYN "address        contents\n");
   long data = ptrace(PTRACE_PEEKTEXT, pid, (long *)sp, 0);
-  printf(DGR "0x%lx |" WHT " 0x%lx <-- $rsp\n", sp, data);
+  printf(DGR "0x%lx " WHT " 0x%lx <-- $rsp\n", sp, data);
   for (int i = 1; i < amount; i++) {
     data = ptrace(PTRACE_PEEKTEXT, pid, (long *)sp + i, 0);
-    printf(DGR "0x%lx |" WHT " 0x%lx\n", sp + i * 8, data);
+    printf(DGR "0x%lx " WHT " 0x%lx\n", sp + i * 8, data);
   }
+  printf("\n");
 }
 
 void print_all_breaks(struct head *bp_head) {
