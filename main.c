@@ -101,7 +101,7 @@ int terminal(char *argv[]) {
 
     sscanf(argument, "%s ", command);
 
-    struct search_term result;
+    struct search_result result;
 
     char *ptr;
     long number = 0;
@@ -158,7 +158,7 @@ int terminal(char *argv[]) {
       }
       number = strtoul(amount, &ptr, 16);
       if (!number) {
-        result = search_funcs64(fd, eh, sh_tbl, amount);
+        result = search_syms_table64(fd, eh, sh_tbl, 0, amount);
         if (result.size != 0) {
           new = add_breakpoint(result.address, &bp_head);
           new->old_data = set_breakpoint(pid, result.address);
@@ -183,8 +183,8 @@ int terminal(char *argv[]) {
         number = strtoul(amount, &ptr, 16);
         if (number == 0) {
           sscanf(argument, "%*s %s", amount);
-          result = search_funcs64(fd, eh, sh_tbl, amount);
-          if (result.size != 0) {
+          result = search_syms_table64(fd, eh, sh_tbl, 0, amount);
+          if (result.address != 0) {
             printf(RESET CYN "Disassembly of %s\n", amount);
             disas(pid, result.size, result.address, fd, eh, sh_tbl, regs.rip,
                   raw_file);
@@ -208,7 +208,7 @@ int terminal(char *argv[]) {
         number = strtoul(amount, &ptr, 16);
         if (!number) {
           sscanf(argument, "%*s %s", amount);
-          result = search_funcs64(fd, eh, sh_tbl, amount);
+          result = search_syms_table64(fd, eh, sh_tbl, 0, amount);
           if (result.size != 0) {
             printf(RESET CYN "Hexdump of %s\n", amount);
             hex(pid, result.size, result.address, fd, eh, sh_tbl, regs.rip,

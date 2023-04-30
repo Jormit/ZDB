@@ -211,7 +211,7 @@ void print_section_headers64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
 }
 
 void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type) {
-  uint32_t rela_tbl_index = 0;                          
+  uint32_t rela_tbl_index = 0;               
   for (uint32_t i = 0; i < eh.e_shnum; i++) {
     if (sh_table[i].sh_type == SHT_RELA) {
       rela_tbl_index = i;
@@ -289,133 +289,72 @@ void print_dynsyms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], uns
   free(str_tbl);
 }
 
-// Actually wtf pls kill me.
-char *search_func_tbl_by_addr(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
-                              uint32_t symbol_table, uint32_t plt_table,
-                              Elf64_Addr plt_mem, long search_addr) {
-
-  char *str_tbl;
-  Elf64_Rela *plt_tbl;
-  uint32_t i, symbol_count, plt_count;
-  Elf64_Sym *sym_tbl;
-  int plt_offset = 0;
-
-  sym_tbl = (Elf64_Sym *)read_section64(fd, sh_table[symbol_table]);
-
-  if (plt_table != 0) {
-    plt_tbl = (Elf64_Rela *)read_section64(fd, sh_table[plt_table]);
-  }
-
-  uint32_t str_tbl_ndx = sh_table[symbol_table].sh_link;
-  // debug("str_table_ndx = 0x%x\n", str_tbl_ndx);
-  str_tbl = read_section64(fd, sh_table[str_tbl_ndx]);
-
-  plt_count = (sh_table[plt_table].sh_size / sizeof(Elf64_Rela));
-  symbol_count = (sh_table[symbol_table].sh_size / sizeof(Elf64_Sym));
-
-  for (i = 0; i < symbol_count; i++) {
-    if (ELF32_ST_TYPE(sym_tbl[i].st_info) != STT_FUNC) {
-      continue;
-    } else if (plt_table == 0 && sym_tbl[i].st_value == 0x0) {
-      continue;
-    }
-    if (plt_table == 0) {
-      if (search_addr == sym_tbl[i].st_value) {
-        return (str_tbl + sym_tbl[i].st_name);
-      }
-    }
-    if (plt_table != 0 && plt_offset < plt_count && i > 0 &&
-        ((ELF64_R_SYM(plt_tbl[plt_offset].r_info) == i))) {
-      if (plt_mem + (int)(16 * (plt_offset + 1)) == search_addr) {
-        return (str_tbl + sym_tbl[i].st_name);
-      }
-      plt_offset++;
-    }
-  }
-  return NULL;
-}
-
-// Find func name from address (include linked functions)
-char *search_funcs_by_addr(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
-                           long search_addr) {
-  uint32_t i;
-  int plt_rela_table = 0;
-  Elf64_Addr plt_address = 0;
-  char *sh_str = read_section64(fd, sh_table[eh.e_shstrndx]);
-
-  // Find where rela.plt and .plt is.
-  for (i = 0; i < eh.e_shnum; i++) {
-    if ((sh_table[i].sh_type == SHT_RELA && sh_table[i].sh_info)) {
-      plt_rela_table = i;
-    }
-    if (strcmp((sh_str + sh_table[i].sh_name), ".plt") == 0) {
-      plt_address = sh_table[i].sh_addr;
-    }
-  }
-  // Search dynsyms and symtab.
-  for (i = 0; i < eh.e_shnum; i++) {
+struct search_result search_syms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], Elf64_Addr address, char *name) {
+  uint32_t syms_tbl_index = 0;
+  struct search_result ret = {.address = 0, .name = NULL, .size = 0 };                
+  for (uint32_t i = 0; i < eh.e_shnum; i++) {
     if (sh_table[i].sh_type == SHT_SYMTAB) {
-      char *result =
-          search_func_tbl_by_addr(fd, eh, sh_table, i, 0, 0, search_addr);
-      if (result != NULL) {
-        return result;
-      }
-    } else if (sh_table[i].sh_type == SHT_DYNSYM) {
-      char *result = search_func_tbl_by_addr(
-          fd, eh, sh_table, i, plt_rela_table, plt_address, search_addr);
-      if (result != NULL) {
-        return result;
-      }
+      syms_tbl_index = i;
     }
   }
-  return NULL;
+  Elf64_Sym *syms_tbl = (Elf64_Sym *)read_section64(fd, sh_table[syms_tbl_index]);
+  char *str_tbl = read_section64(fd, sh_table[sh_table[syms_tbl_index].sh_link]);
+  uint32_t symbol_count = (sh_table[syms_tbl_index].sh_size / sizeof(Elf64_Rela));
+
+  for (uint32_t i = 0; i < symbol_count; i++) {
+      uint32_t name_index = syms_tbl[i].st_name;
+      if (name_index && name != NULL && !strcmp(name, str_tbl + name_index)) {        
+        ret.address = syms_tbl[i].st_value;
+        ret.size = syms_tbl[i].st_size;
+        break;
+      } else if (syms_tbl[i].st_value == address) {
+        ret.address = syms_tbl[i].st_value;
+        ret.name = malloc(strlen(str_tbl + name_index) * sizeof(char));
+        strcpy(ret.name, str_tbl + name_index);
+        ret.size = syms_tbl[i].st_size;        
+      }
+        
+  }
+  free(syms_tbl);
+  free(str_tbl);
+  return ret;
 }
 
-// Search user functions by name.
-struct search_term search_funcs64(int32_t fd, Elf64_Ehdr eh,
-                                  Elf64_Shdr sh_table[], char *query) {
-  uint32_t i;
-  struct search_term result;
-  result.size = 0;
-  result.address = 0;
+struct search_result search_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], Elf64_Addr address, char *name) {
+  uint32_t rela_tbl_index = 0;
+  struct search_result ret = {.address = 0, .name = NULL, .size = 0 };                        
+  for (uint32_t i = 0; i < eh.e_shnum; i++) {
+    if (sh_table[i].sh_type == SHT_RELA) {
+      rela_tbl_index = i;
+    }
+  }
+  Elf64_Rela *rela_tbl = (Elf64_Rela *)read_section64(fd, sh_table[rela_tbl_index]);
+  uint32_t dynsym_index = 0;
+  for (uint32_t i = 0; i < eh.e_shnum; i++) {
+    if (sh_table[i].sh_type == SHT_DYNSYM) {
+      dynsym_index = i;
+      break;
+    }
+  }
+  Elf64_Sym *dynsym_tbl = (Elf64_Sym *)read_section64(fd, sh_table[dynsym_index]);
+  char *str_tbl = read_section64(fd, sh_table[sh_table[dynsym_index].sh_link]);
+  uint32_t symbol_count = (sh_table[rela_tbl_index].sh_size / sizeof(Elf64_Rela));
 
-  for (i = 0; i < eh.e_shnum; i++) {
-    if (sh_table[i].sh_type == SHT_SYMTAB) {
-      struct search_term result =
-          search_func_table64(fd, eh, sh_table, i, query);
-      if (result.size != 0) {
-        return result;
+  for (uint32_t i = 0; i < symbol_count; i++) {
+      uint32_t name_index = dynsym_tbl[ELF64_R_SYM (rela_tbl[i].r_info)].st_name;
+      if (name_index && name != NULL && !strcmp(name, str_tbl + name_index)) {        
+        ret.address = rela_tbl[i].r_offset;
+        ret.size = dynsym_tbl[ELF64_R_SYM (rela_tbl[i].r_info)].st_size;
+        break;
+      } else if (rela_tbl[i].r_offset == address) {
+        ret.address = rela_tbl[i].r_offset;
+        ret.name = malloc(strlen(str_tbl + name_index) * sizeof(char));
+        strcpy(ret.name, str_tbl + name_index);
+        ret.size = dynsym_tbl[ELF64_R_SYM (rela_tbl[i].r_info)].st_size;
       }
-    }
   }
-  return result;
-}
-
-// Search user func table by name.
-struct search_term search_func_table64(int32_t fd, Elf64_Ehdr eh,
-                                       Elf64_Shdr sh_table[],
-                                       uint32_t symbol_table, char *query) {
-  char *str_tbl;
-  Elf64_Sym *sym_tbl;
-  uint32_t i, symbol_count;
-  struct search_term result;
-
-  result.size = 0;
-  result.address = 0;
-
-  sym_tbl = (Elf64_Sym *)read_section64(fd, sh_table[symbol_table]);
-
-  uint32_t str_tbl_ndx = sh_table[symbol_table].sh_link;
-  str_tbl = read_section64(fd, sh_table[str_tbl_ndx]);
-
-  symbol_count = (sh_table[symbol_table].sh_size / sizeof(Elf64_Sym));
-
-  for (i = 0; i < symbol_count; i++) {
-    if (strcmp((str_tbl + sym_tbl[i].st_name), query) == 0) {
-      result.address = sym_tbl[i].st_value;
-      result.size = sym_tbl[i].st_size;
-      return result;
-    }
-  }
-  return result;
+  free(rela_tbl);
+  free(dynsym_tbl);
+  free(str_tbl);
+  return ret;
 }

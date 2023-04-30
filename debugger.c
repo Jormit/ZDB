@@ -84,14 +84,20 @@ void disas(pid_t pid, int length, long location, int32_t fd, Elf64_Ehdr eh,
     for (j = 0; j < count; j++) {
       printf("    ");
       if (*insn[j].bytes == 0xE8) {
-        // Yes this is bad.
         printf(DGR "0x%" PRIx64 GRN ":\t%s\t%s" RESET, insn[j].address,
                insn[j].mnemonic, insn[j].op_str);
         char call_address[100] = {0};
         sscanf(&insn[j].op_str[2], "%s", call_address);
 
-        printf(" <%s>", search_funcs_by_addr(fd, eh, sh_table,
-                                             strtoul(call_address, NULL, 16)));
+        struct search_result result = search_syms_table64(fd, eh, sh_table, strtoul(call_address, NULL, 16), NULL);
+        if (result.name == NULL) {
+          result = search_rela_table64(fd, eh, sh_table, strtoul(call_address, NULL, 16), NULL);
+        }
+
+        if (result.name != NULL) {
+          printf(" <%s>", result.name);
+          free(result.name);
+        }
 
         // For printing nice colors.
       } else if (*insn[j].bytes == 0x55) {

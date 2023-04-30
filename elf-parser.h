@@ -11,9 +11,10 @@
       printf("<debug>:"__VA_ARGS__);                                           \
   } while (0)
 
-struct search_term {
-  long address;
-  long size;
+struct search_result {
+  Elf64_Addr address;
+  uint64_t size;
+  char* name;
 };
 
 // Checking elf.
@@ -28,30 +29,12 @@ void read_section_header_table64(int32_t fd, Elf64_Ehdr eh,
 // Section functions.
 char *read_section64(int32_t fd, Elf64_Shdr sh);
 
-
 // Table Printing Functions
 void print_section_headers64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]);
 void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type);
 void print_syms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type);
 void print_dynsyms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type);
 
-// Searching For functions by name.
-struct search_term search_funcs64(int32_t fd, Elf64_Ehdr eh,
-                                  Elf64_Shdr sh_table[], char *query);
-struct search_term search_func_table64(int32_t fd, Elf64_Ehdr eh,
-                                       Elf64_Shdr sh_table[],
-                                       uint32_t symbol_table, char *query);
-
-// Searching for functions by address (uses plt stub address for dynamic
-// functions).
-char *search_func_tbl_by_addr(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
-                              uint32_t symbol_table, uint32_t plt_table,
-                              Elf64_Addr plt_mem, long search_addr);
-char *search_funcs_by_addr(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
-                           long search_addr);
-
-// Print out functions and .plt and .got addresses.
-void print_func_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
-                        uint32_t symbol_table, uint32_t plt_table,
-                        Elf64_Addr plt_mem);
-void print_funcs64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]);
+// Searching Functions
+struct search_result search_syms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], Elf64_Addr address, char *name);
+struct search_result search_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], Elf64_Addr address, char *name);
