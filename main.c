@@ -50,7 +50,6 @@ int terminal(char *argv[]) {
   int tracee_status = not_running;
   struct user_regs_struct regs;
   pid_t pid;
-  int running = 1;
   struct head bp_head;
   bp_head.list = NULL;
 
