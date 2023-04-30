@@ -210,7 +210,8 @@ void print_section_headers64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
   free(sh_str);
 }
 
-void print_rela_tables64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type) {            
+void print_rela_tables64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
+                         unsigned char type) {
   for (uint32_t i = 0; i < eh.e_shnum; i++) {
     if (sh_table[i].sh_type == SHT_RELA) {
       print_rela_table64(fd, eh, sh_table, type, i);
@@ -218,8 +219,10 @@ void print_rela_tables64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsig
   }
 }
 
-void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type, uint32_t rela_tbl_index) {  
-  Elf64_Rela *rela_tbl = (Elf64_Rela *)read_section64(fd, sh_table[rela_tbl_index]);
+void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
+                        unsigned char type, uint32_t rela_tbl_index) {
+  Elf64_Rela *rela_tbl =
+      (Elf64_Rela *)read_section64(fd, sh_table[rela_tbl_index]);
   uint32_t dynsym_index = 0;
   for (uint32_t i = 0; i < eh.e_shnum; i++) {
     if (sh_table[i].sh_type == SHT_DYNSYM) {
@@ -227,17 +230,20 @@ void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsign
       break;
     }
   }
-  Elf64_Sym *dynsym_tbl = (Elf64_Sym *)read_section64(fd, sh_table[dynsym_index]);
+  Elf64_Sym *dynsym_tbl =
+      (Elf64_Sym *)read_section64(fd, sh_table[dynsym_index]);
   char *str_tbl = read_section64(fd, sh_table[sh_table[dynsym_index].sh_link]);
-  uint32_t symbol_count = (sh_table[rela_tbl_index].sh_size / sizeof(Elf64_Rela));
+  uint32_t symbol_count =
+      (sh_table[rela_tbl_index].sh_size / sizeof(Elf64_Rela));
 
   for (uint32_t i = 0; i < symbol_count; i++) {
-      uint32_t name_index = dynsym_tbl[ELF64_R_SYM (rela_tbl[i].r_info)].st_name;
-      unsigned char sym_type = ELF64_ST_TYPE(dynsym_tbl[ELF64_R_SYM (rela_tbl[i].r_info)].st_info);
-      if (name_index && (type == STT_NOTYPE || type == sym_type)) {
-        printf("0x%08lx ", rela_tbl[i].r_offset);
-        printf("%s\n", str_tbl + name_index);
-      }
+    uint32_t name_index = dynsym_tbl[ELF64_R_SYM(rela_tbl[i].r_info)].st_name;
+    unsigned char sym_type =
+        ELF64_ST_TYPE(dynsym_tbl[ELF64_R_SYM(rela_tbl[i].r_info)].st_info);
+    if (name_index && (type == STT_NOTYPE || type == sym_type)) {
+      printf("0x%08lx ", rela_tbl[i].r_offset);
+      printf("%s\n", str_tbl + name_index);
+    }
   }
 
   free(rela_tbl);
@@ -245,7 +251,8 @@ void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsign
   free(str_tbl);
 }
 
-void print_syms_tables64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type) {                 
+void print_syms_tables64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
+                         unsigned char type) {
   for (uint32_t i = 0; i < eh.e_shnum; i++) {
     if (sh_table[i].sh_type == SHT_SYMTAB) {
       print_syms_table64(fd, eh, sh_table, type, i);
@@ -253,7 +260,8 @@ void print_syms_tables64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsig
   }
 }
 
-void print_dynsyms_tables64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type) {
+void print_dynsyms_tables64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
+                            unsigned char type) {
   for (uint32_t i = 0; i < eh.e_shnum; i++) {
     if (sh_table[i].sh_type == SHT_DYNSYM) {
       print_syms_table64(fd, eh, sh_table, type, i);
@@ -261,63 +269,74 @@ void print_dynsyms_tables64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], un
   }
 }
 
-void print_syms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type, uint32_t syms_tbl_index) {  
-  Elf64_Sym *syms_tbl = (Elf64_Sym *)read_section64(fd, sh_table[syms_tbl_index]);
-  char *str_tbl = read_section64(fd, sh_table[sh_table[syms_tbl_index].sh_link]);
-  uint32_t symbol_count = (sh_table[syms_tbl_index].sh_size / sizeof(Elf64_Rela));
+void print_syms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
+                        unsigned char type, uint32_t syms_tbl_index) {
+  Elf64_Sym *syms_tbl =
+      (Elf64_Sym *)read_section64(fd, sh_table[syms_tbl_index]);
+  char *str_tbl =
+      read_section64(fd, sh_table[sh_table[syms_tbl_index].sh_link]);
+  uint32_t symbol_count =
+      (sh_table[syms_tbl_index].sh_size / sizeof(Elf64_Rela));
 
   for (uint32_t i = 0; i < symbol_count; i++) {
-      uint32_t name_index = syms_tbl[i].st_name;
-      unsigned char sym_type = ELF64_ST_TYPE(syms_tbl[i].st_info);
-      if (name_index && (type == STT_NOTYPE || type == sym_type)) {
-        printf("0x%08lx ", syms_tbl[i].st_value);
-        printf("%s\n", (str_tbl + name_index));
-      }
+    uint32_t name_index = syms_tbl[i].st_name;
+    unsigned char sym_type = ELF64_ST_TYPE(syms_tbl[i].st_info);
+    if (name_index && (type == STT_NOTYPE || type == sym_type)) {
+      printf("0x%08lx ", syms_tbl[i].st_value);
+      printf("%s\n", (str_tbl + name_index));
+    }
   }
   free(syms_tbl);
   free(str_tbl);
 }
 
-struct search_result search_syms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], Elf64_Addr address, char *name) {
+struct search_result search_syms_table64(int32_t fd, Elf64_Ehdr eh,
+                                         Elf64_Shdr sh_table[],
+                                         Elf64_Addr address, char *name) {
   uint32_t syms_tbl_index = 0;
-  struct search_result ret = {.address = 0, .name = NULL, .size = 0 };                
+  struct search_result ret = {.address = 0, .name = NULL, .size = 0};
   for (uint32_t i = 0; i < eh.e_shnum; i++) {
     if (sh_table[i].sh_type == SHT_SYMTAB) {
       syms_tbl_index = i;
     }
   }
-  Elf64_Sym *syms_tbl = (Elf64_Sym *)read_section64(fd, sh_table[syms_tbl_index]);
-  char *str_tbl = read_section64(fd, sh_table[sh_table[syms_tbl_index].sh_link]);
-  uint32_t symbol_count = (sh_table[syms_tbl_index].sh_size / sizeof(Elf64_Rela));
+  Elf64_Sym *syms_tbl =
+      (Elf64_Sym *)read_section64(fd, sh_table[syms_tbl_index]);
+  char *str_tbl =
+      read_section64(fd, sh_table[sh_table[syms_tbl_index].sh_link]);
+  uint32_t symbol_count =
+      (sh_table[syms_tbl_index].sh_size / sizeof(Elf64_Rela));
 
   for (uint32_t i = 0; i < symbol_count; i++) {
-      uint32_t name_index = syms_tbl[i].st_name;
-      if (name_index && name != NULL && !strcmp(name, str_tbl + name_index)) {        
-        ret.address = syms_tbl[i].st_value;
-        ret.size = syms_tbl[i].st_size;
-        break;
-      } else if (syms_tbl[i].st_value == address) {
-        ret.address = syms_tbl[i].st_value;
-        ret.name = malloc(strlen(str_tbl + name_index) * sizeof(char));
-        strcpy(ret.name, str_tbl + name_index);
-        ret.size = syms_tbl[i].st_size;        
-      }
-        
+    uint32_t name_index = syms_tbl[i].st_name;
+    if (name_index && name != NULL && !strcmp(name, str_tbl + name_index)) {
+      ret.address = syms_tbl[i].st_value;
+      ret.size = syms_tbl[i].st_size;
+      break;
+    } else if (syms_tbl[i].st_value == address) {
+      ret.address = syms_tbl[i].st_value;
+      ret.name = malloc(strlen(str_tbl + name_index) * sizeof(char));
+      strcpy(ret.name, str_tbl + name_index);
+      ret.size = syms_tbl[i].st_size;
+    }
   }
   free(syms_tbl);
   free(str_tbl);
   return ret;
 }
 
-struct search_result search_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], Elf64_Addr address, char *name) {
+struct search_result search_rela_table64(int32_t fd, Elf64_Ehdr eh,
+                                         Elf64_Shdr sh_table[],
+                                         Elf64_Addr address, char *name) {
   uint32_t rela_tbl_index = 0;
-  struct search_result ret = {.address = 0, .name = NULL, .size = 0 };                        
+  struct search_result ret = {.address = 0, .name = NULL, .size = 0};
   for (uint32_t i = 0; i < eh.e_shnum; i++) {
     if (sh_table[i].sh_type == SHT_RELA) {
       rela_tbl_index = i;
     }
   }
-  Elf64_Rela *rela_tbl = (Elf64_Rela *)read_section64(fd, sh_table[rela_tbl_index]);
+  Elf64_Rela *rela_tbl =
+      (Elf64_Rela *)read_section64(fd, sh_table[rela_tbl_index]);
   uint32_t dynsym_index = 0;
   for (uint32_t i = 0; i < eh.e_shnum; i++) {
     if (sh_table[i].sh_type == SHT_DYNSYM) {
@@ -325,22 +344,24 @@ struct search_result search_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr s
       break;
     }
   }
-  Elf64_Sym *dynsym_tbl = (Elf64_Sym *)read_section64(fd, sh_table[dynsym_index]);
+  Elf64_Sym *dynsym_tbl =
+      (Elf64_Sym *)read_section64(fd, sh_table[dynsym_index]);
   char *str_tbl = read_section64(fd, sh_table[sh_table[dynsym_index].sh_link]);
-  uint32_t symbol_count = (sh_table[rela_tbl_index].sh_size / sizeof(Elf64_Rela));
+  uint32_t symbol_count =
+      (sh_table[rela_tbl_index].sh_size / sizeof(Elf64_Rela));
 
   for (uint32_t i = 0; i < symbol_count; i++) {
-      uint32_t name_index = dynsym_tbl[ELF64_R_SYM (rela_tbl[i].r_info)].st_name;
-      if (name_index && name != NULL && !strcmp(name, str_tbl + name_index)) {        
-        ret.address = rela_tbl[i].r_offset;
-        ret.size = dynsym_tbl[ELF64_R_SYM (rela_tbl[i].r_info)].st_size;
-        break;
-      } else if (rela_tbl[i].r_offset == address) {
-        ret.address = rela_tbl[i].r_offset;
-        ret.name = malloc(strlen(str_tbl + name_index) * sizeof(char));
-        strcpy(ret.name, str_tbl + name_index);
-        ret.size = dynsym_tbl[ELF64_R_SYM (rela_tbl[i].r_info)].st_size;
-      }
+    uint32_t name_index = dynsym_tbl[ELF64_R_SYM(rela_tbl[i].r_info)].st_name;
+    if (name_index && name != NULL && !strcmp(name, str_tbl + name_index)) {
+      ret.address = rela_tbl[i].r_offset;
+      ret.size = dynsym_tbl[ELF64_R_SYM(rela_tbl[i].r_info)].st_size;
+      break;
+    } else if (rela_tbl[i].r_offset == address) {
+      ret.address = rela_tbl[i].r_offset;
+      ret.name = malloc(strlen(str_tbl + name_index) * sizeof(char));
+      strcpy(ret.name, str_tbl + name_index);
+      ret.size = dynsym_tbl[ELF64_R_SYM(rela_tbl[i].r_info)].st_size;
+    }
   }
   free(rela_tbl);
   free(dynsym_tbl);

@@ -89,9 +89,11 @@ void disas(pid_t pid, int length, long location, int32_t fd, Elf64_Ehdr eh,
         char call_address[100] = {0};
         sscanf(&insn[j].op_str[2], "%s", call_address);
 
-        struct search_result result = search_syms_table64(fd, eh, sh_table, strtoul(call_address, NULL, 16), NULL);
+        struct search_result result = search_syms_table64(
+            fd, eh, sh_table, strtoul(call_address, NULL, 16), NULL);
         if (result.name == NULL) {
-          result = search_rela_table64(fd, eh, sh_table, strtoul(call_address, NULL, 16), NULL);
+          result = search_rela_table64(fd, eh, sh_table,
+                                       strtoul(call_address, NULL, 16), NULL);
         }
 
         if (result.name != NULL) {
