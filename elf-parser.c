@@ -17,15 +17,10 @@ void read_elf_header64(int32_t fd, Elf64_Ehdr *elf_header) {
 }
 
 bool is_ELF64(Elf64_Ehdr eh) {
-  /* ELF magic bytes are 0x7f,'E','L','F'
-   * Using  octal escape sequence to represent 0x7f
-   */
   if (!strncmp((char *)eh.e_ident, "\177ELF", 4)) {
-    /* IS a ELF file */
     return 1;
   } else {
     printf("ELFMAGIC mismatch!\n");
-    /* Not ELF file */
     return 0;
   }
 }
