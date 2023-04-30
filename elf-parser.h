@@ -27,12 +27,13 @@ void read_section_header_table64(int32_t fd, Elf64_Ehdr eh,
 
 // Section functions.
 char *read_section64(int32_t fd, Elf64_Shdr sh);
-void print_section_headers64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]);
+
 
 // Table Printing Functions
-void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]);
-void print_syms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]);
-void print_dynsyms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]);
+void print_section_headers64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]);
+void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type);
+void print_syms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type);
+void print_dynsyms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type);
 
 // Searching For functions by name.
 struct search_term search_funcs64(int32_t fd, Elf64_Ehdr eh,

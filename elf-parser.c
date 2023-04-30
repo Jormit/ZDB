@@ -184,11 +184,8 @@ void print_elf_header64(Elf64_Ehdr elf_header) {
 
 void read_section_header_table64(int32_t fd, Elf64_Ehdr eh,
                                  Elf64_Shdr sh_table[]) {
-  uint32_t i;
-
   assert(lseek(fd, (off_t)eh.e_shoff, SEEK_SET) == (off_t)eh.e_shoff);
-
-  for (i = 0; i < eh.e_shnum; i++) {
+  for (uint32_t i = 0; i < eh.e_shnum; i++) {
     assert(read(fd, (void *)&sh_table[i], eh.e_shentsize) == eh.e_shentsize);
   }
 }
@@ -207,7 +204,7 @@ char *read_section64(int32_t fd, Elf64_Shdr sh) {
 }
 
 void print_section_headers64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
-  char *sh_str = sh_str = read_section64(fd, sh_table[eh.e_shstrndx]);
+  char *sh_str = read_section64(fd, sh_table[eh.e_shstrndx]);
   printf(CYN "load-addr  size       section\n");
   for (uint32_t i = 0; i < eh.e_shnum; i++) {
     printf(DGR "0x%08lx ", sh_table[i].sh_addr);
@@ -215,9 +212,10 @@ void print_section_headers64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
     printf(WHT "%s\t", (sh_str + sh_table[i].sh_name));
     printf("\n");
   }
+  free(sh_str);
 }
 
-void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
+void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type) {
   uint32_t rela_tbl_index = 0;                          
   for (uint32_t i = 0; i < eh.e_shnum; i++) {
     if (sh_table[i].sh_type == SHT_RELA) {
@@ -236,15 +234,21 @@ void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
   char *str_tbl = read_section64(fd, sh_table[sh_table[dynsym_index].sh_link]);
   uint32_t symbol_count = (sh_table[rela_tbl_index].sh_size / sizeof(Elf64_Rela));
 
-  printf("%u\n", symbol_count);
-
   for (uint32_t i = 0; i < symbol_count; i++) {
-       printf("0x%08lx ", rela_tbl[i].r_offset);
-       printf("%s\n", (str_tbl + dynsym_tbl[ELF64_R_SYM (rela_tbl[i].r_info)].st_name));
+      uint32_t name_index = dynsym_tbl[ELF64_R_SYM (rela_tbl[i].r_info)].st_name;
+      unsigned char sym_type = ELF64_ST_TYPE(dynsym_tbl[ELF64_R_SYM (rela_tbl[i].r_info)].st_info);
+      if (name_index && (type == STT_NOTYPE || type == sym_type)) {
+        printf("0x%08lx ", rela_tbl[i].r_offset);
+        printf("%s\n", str_tbl + name_index);
+      }
   }
+
+  free(rela_tbl);
+  free(dynsym_tbl);
+  free(str_tbl);
 }
 
-void print_syms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
+void print_syms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type) {
   uint32_t syms_tbl_index = 0;                          
   for (uint32_t i = 0; i < eh.e_shnum; i++) {
     if (sh_table[i].sh_type == SHT_SYMTAB) {
@@ -256,15 +260,19 @@ void print_syms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
   uint32_t symbol_count = (sh_table[syms_tbl_index].sh_size / sizeof(Elf64_Rela));
 
   for (uint32_t i = 0; i < symbol_count; i++) {
-       uint32_t name_index = syms_tbl[i].st_name;
-       if (name_index) {
+      uint32_t name_index = syms_tbl[i].st_name;
+      unsigned char sym_type = ELF64_ST_TYPE(syms_tbl[i].st_info);
+      if (name_index && (type == STT_NOTYPE || type == sym_type)) {
+        printf("%d  ", sym_type);
         printf("0x%08lx ", syms_tbl[i].st_value);
         printf("%s\n", (str_tbl + name_index));
-       }
+      }
   }
+  free(syms_tbl);
+  free(str_tbl);
 }
 
-void print_dynsyms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
+void print_dynsyms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsigned char type) {
   uint32_t dynsyms_tbl_index = 0;                          
   for (uint32_t i = 0; i < eh.e_shnum; i++) {
     if (sh_table[i].sh_type == SHT_DYNSYM) {
@@ -277,88 +285,14 @@ void print_dynsyms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
 
   for (uint32_t i = 0; i < symbol_count; i++) {
        uint32_t name_index = dynsyms_tbl[i].st_name;
-       if (name_index) {
+       unsigned char sym_type = ELF64_ST_TYPE(dynsyms_tbl[i].st_info);
+       if (name_index && (type == STT_NOTYPE || type == sym_type)) {
         printf("0x%08lx ", dynsyms_tbl[i].st_value);
         printf("%s\n", (str_tbl + name_index));
        }
   }
-}
-
-// Print functions nicely.
-void print_func_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
-                        uint32_t symbol_table, uint32_t plt_table,
-                        Elf64_Addr plt_mem) {
-  char *str_tbl;
-  Elf64_Rela *plt_tbl;
-  uint32_t i, symbol_count, plt_count;
-  Elf64_Sym *sym_tbl;
-  int plt_offset = 0;
-
-  sym_tbl = (Elf64_Sym *)read_section64(fd, sh_table[symbol_table]);
-
-  if (plt_table != 0) {
-    plt_tbl = (Elf64_Rela *)read_section64(fd, sh_table[plt_table]);
-  }
-
-  uint32_t str_tbl_ndx = sh_table[symbol_table].sh_link;
-  str_tbl = read_section64(fd, sh_table[str_tbl_ndx]);
-
-  plt_count = (sh_table[plt_table].sh_size / sizeof(Elf64_Rela));
-  symbol_count = (sh_table[symbol_table].sh_size / sizeof(Elf64_Sym));
-
-  if (plt_table) {
-    printf(CYN "\n.got       .plt         symbol_name\n");
-  } else {
-    printf(CYN "\naddress      symbol_name\n");
-  }
-
-  for (i = 0; i < symbol_count; i++) {
-    if (ELF32_ST_TYPE(sym_tbl[i].st_info) != STT_FUNC) {
-      continue;
-    } else if (plt_table == 0 && sym_tbl[i].st_value == 0x0) {
-      continue;
-    }
-    if (plt_table == 0) {
-      printf(DGR "0x%08lx | ", sym_tbl[i].st_value);
-    }
-    if (plt_table != 0 && plt_offset < plt_count && i > 0 &&
-        ((ELF64_R_SYM(plt_tbl[plt_offset].r_info) == i))) {
-      printf(DGR "0x%08lx ", plt_tbl[plt_offset].r_offset);
-      printf(DGR "0x%08lx | ", plt_mem + (int)(16 * (plt_offset + 1)));
-      plt_offset++;
-    } else if (plt_table != 0) {
-      continue;
-    }
-    printf(WHT "%s\n", (str_tbl + sym_tbl[i].st_name));
-  }
-}
-
-// Print functions nicely.
-void print_funcs64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
-  uint32_t i;
-  int plt_rela_table = 0;
-  Elf64_Addr plt_address = 0;
-  char *sh_str = read_section64(fd, sh_table[eh.e_shstrndx]);
-
-  // Find where rela.plt and .plt is.
-  for (i = 0; i < eh.e_shnum; i++) {
-    if ((sh_table[i].sh_type == SHT_RELA && sh_table[i].sh_info)) {
-      plt_rela_table = i;
-    }
-    if (strcmp((sh_str + sh_table[i].sh_name), ".plt") == 0) {
-      plt_address = sh_table[i].sh_addr;
-    }
-  }
-  // Print dynsyms and symtab.
-  for (i = 0; i < eh.e_shnum; i++) {
-    if (sh_table[i].sh_type == SHT_SYMTAB) {
-      printf("\n[User Defined Functions] ");
-      print_func_table64(fd, eh, sh_table, i, 0, 0);
-    } else if (sh_table[i].sh_type == SHT_DYNSYM) {
-      printf("[Dynamic Functions] ");
-      print_func_table64(fd, eh, sh_table, i, plt_rela_table, plt_address);
-    }
-  }
+  free(dynsyms_tbl);
+  free(str_tbl);
 }
 
 // Actually wtf pls kill me.
