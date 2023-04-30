@@ -227,7 +227,7 @@ int terminal(char *argv[]) {
       break;
 
     case SYMBOLS:
-      print_symbols64(fd, eh, sh_tbl);
+      print_syms_table64(fd, eh, sh_tbl);
       break;
 
     case SECTIONS:

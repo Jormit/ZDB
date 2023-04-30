@@ -250,6 +250,26 @@ void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
   }
 }
 
+void print_syms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
+  uint32_t syms_tbl_index = 0;                          
+  for (uint32_t i = 0; i < eh.e_shnum; i++) {
+    if (sh_table[i].sh_type == SHT_SYMTAB) {
+      syms_tbl_index = i;
+    }
+  }
+  Elf64_Sym *syms_tbl = (Elf64_Sym *)read_section64(fd, sh_table[syms_tbl_index]);
+  char *str_tbl = read_section64(fd, sh_table[sh_table[syms_tbl_index].sh_link]);
+  uint32_t symbol_count = (sh_table[syms_tbl_index].sh_size / sizeof(Elf64_Rela));
+
+  for (uint32_t i = 0; i < symbol_count; i++) {
+       uint32_t name_index = syms_tbl[i].st_name;
+       if (name_index) {
+        printf("0x%08lx ", syms_tbl[i].st_value);
+        printf("%s\n", (str_tbl + name_index));
+       }       
+  }
+}
+
 void print_symbol_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
                           uint32_t symbol_table) {
   char *str_tbl;
