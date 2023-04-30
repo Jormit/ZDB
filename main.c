@@ -46,7 +46,6 @@ int main(int argc, char *argv[]) {
 
 int terminal(char *argv[]) {
   char argument[100];
-
   int tracee_status = not_running;
   struct user_regs_struct regs;
   pid_t pid;
@@ -97,11 +96,9 @@ int terminal(char *argv[]) {
     fgets(argument, 100, stdin);
     strtok(argument, "\n");
 
-    char temp[100];
     char command[100];
 
-    strcpy(temp, argument);
-    sscanf(temp, "%s ", command);
+    sscanf(argument, "%s ", command);
 
     struct search_term result;
 
@@ -136,7 +133,7 @@ int terminal(char *argv[]) {
       break;
 
     case STACK:
-      sscanf(temp, "%s %s", argument, amount);
+      sscanf(argument, "%*s %s", amount);
       number = strtoul(amount, &ptr, 10);
       if (number != 0) {
         print_stack(pid, regs.rsp, number);
@@ -154,12 +151,12 @@ int terminal(char *argv[]) {
       break;
 
     case SET_BREAK:
-      if (sscanf(temp, "%s %s", argument, amount) == 1) {
-        printf(CYN "[!] Memory address required.\n");
+      if (sscanf(argument, "%*s %s", amount) == EOF) {
+        printf(CYN "[!] Memory address/function required.\n");
         break;
       }
       number = strtoul(amount, &ptr, 16);
-      if (number == 0) {
+      if (!number) {
         result = search_funcs64(fd, eh, sh_tbl, amount);
         if (result.size != 0) {
           new = add_breakpoint(result.address, &bp_head);
@@ -175,7 +172,7 @@ int terminal(char *argv[]) {
       break;
 
     case DISAS:
-      if (sscanf(temp, "%s %s", argument, amount) == 1) {
+      if (sscanf(argument, "%*s %s", amount) == EOF) {
         if (tracee_status == not_running) {
           printf(CYN "[!] Can't disassemble here!\n");
         } else {
@@ -184,7 +181,7 @@ int terminal(char *argv[]) {
       } else {
         number = strtoul(amount, &ptr, 16);
         if (number == 0) {
-          sscanf(temp, "%s %s", argument, amount);
+          sscanf(argument, "%*s %s", amount);
           result = search_funcs64(fd, eh, sh_tbl, amount);
           if (result.size != 0) {
             printf(RESET CYN "Disassembly of %s\n", amount);
@@ -200,7 +197,7 @@ int terminal(char *argv[]) {
       break;
 
     case HEX:
-      if (sscanf(temp, "%s %s", argument, amount) == 1) {
+      if (sscanf(argument, "%*s %s", amount) == EOF) {
         if (tracee_status == not_running) {
           printf(CYN "[!] Can't disassemble here!\n");
         } else {
@@ -208,8 +205,8 @@ int terminal(char *argv[]) {
         }
       } else {
         number = strtoul(amount, &ptr, 16);
-        if (number == 0) {
-          sscanf(temp, "%s %s", argument, amount);
+        if (!number) {
+          sscanf(argument, "%*s %s", amount);
           result = search_funcs64(fd, eh, sh_tbl, amount);
           if (result.size != 0) {
             printf(RESET CYN "Hexdump of %s\n", amount);
