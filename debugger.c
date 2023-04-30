@@ -279,7 +279,7 @@ void print_registers(struct user_regs_struct *regs) {
 }
 
 void print_stack(pid_t pid, long sp, long amount) {
-  printf(CYN "address        contents\n");
+  printf(CYN "address         contents\n");
   long data = ptrace(PTRACE_PEEKTEXT, pid, (long *)sp, 0);
   printf(DGR "0x%lx " WHT " 0x%lx <-- $rsp\n", sp, data);
   for (int i = 1; i < amount; i++) {
