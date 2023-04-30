@@ -258,7 +258,6 @@ void print_syms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[], unsign
       uint32_t name_index = syms_tbl[i].st_name;
       unsigned char sym_type = ELF64_ST_TYPE(syms_tbl[i].st_info);
       if (name_index && (type == STT_NOTYPE || type == sym_type)) {
-        printf("%d  ", sym_type);
         printf("0x%08lx ", syms_tbl[i].st_value);
         printf("%s\n", (str_tbl + name_index));
       }
