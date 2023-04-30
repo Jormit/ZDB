@@ -16,13 +16,6 @@ void read_elf_header64(int32_t fd, Elf64_Ehdr *elf_header) {
          sizeof(Elf64_Ehdr));
 }
 
-void read_elf_header(int32_t fd, Elf32_Ehdr *elf_header) {
-  assert(elf_header != NULL);
-  assert(lseek(fd, (off_t)0, SEEK_SET) == (off_t)0);
-  assert(read(fd, (void *)elf_header, sizeof(Elf32_Ehdr)) ==
-         sizeof(Elf32_Ehdr));
-}
-
 bool is_ELF64(Elf64_Ehdr eh) {
   /* ELF magic bytes are 0x7f,'E','L','F'
    * Using  octal escape sequence to represent 0x7f
@@ -474,22 +467,4 @@ struct search_term search_func_table64(int32_t fd, Elf64_Ehdr eh,
     }
   }
   return result;
-}
-
-bool is_ELF(Elf32_Ehdr eh) {
-  if (!strncmp((char *)eh.e_ident, "\177ELF", 4)) {
-    /* IS a ELF file */
-    return 1;
-  } else {
-    printf("ELFMAGIC mismatch!\n");
-    /* Not ELF file */
-    return 0;
-  }
-}
-
-bool is64Bit(Elf32_Ehdr eh) {
-  if (eh.e_ident[EI_CLASS] == ELFCLASS64)
-    return true;
-  else
-    return false;
 }

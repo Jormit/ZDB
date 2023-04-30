@@ -17,12 +17,9 @@ struct search_term {
 };
 
 // Checking elf.
-bool is_ELF(Elf32_Ehdr eh);
-bool is64Bit(Elf32_Ehdr eh);
 bool is_ELF64(Elf64_Ehdr eh);
 
 // Header functions.
-void read_elf_header(int32_t fd, Elf32_Ehdr *elf_header);
 void read_elf_header64(int32_t fd, Elf64_Ehdr *elf_header);
 void print_elf_header64(Elf64_Ehdr elf_header);
 void read_section_header_table64(int32_t fd, Elf64_Ehdr eh,

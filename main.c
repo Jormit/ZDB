@@ -56,8 +56,7 @@ int terminal(char *argv[]) {
 
   // Needed to open elf for analysis.
   int32_t fd;
-  Elf32_Ehdr eh;
-  Elf64_Ehdr eh64;
+  Elf64_Ehdr eh;
   Elf64_Shdr *sh_tbl;
 
   // Open up the raw file used for disas.
@@ -72,16 +71,11 @@ int terminal(char *argv[]) {
     return 1;
   }
 
-  read_elf_header(fd, &eh);
-  if (!is_ELF(eh)) {
-    return 1;
-  }
-
-  // We only debug 64 bit atm.
-  if (is64Bit(eh)) {
-    read_elf_header64(fd, &eh64);
-    sh_tbl = malloc(eh64.e_shentsize * eh64.e_shnum);
-    read_section_header_table64(fd, eh64, sh_tbl);
+  // We only debug 64 bit
+  read_elf_header64(fd, &eh);
+  if (is_ELF64(eh)) {
+    sh_tbl = malloc(eh.e_shentsize * eh.e_shnum);
+    read_section_header_table64(fd, eh, sh_tbl);
 
   } else {
     printf(CYN "[x] Elf file is not 64 bits.\n");
@@ -167,7 +161,7 @@ int terminal(char *argv[]) {
       }
       number = strtoul(amount, &ptr, 16);
       if (number == 0) {
-        result = search_funcs64(fd, eh64, sh_tbl, amount);
+        result = search_funcs64(fd, eh, sh_tbl, amount);
         if (result.size != 0) {
           new = add_breakpoint(result.address, &bp_head);
           new->old_data = set_breakpoint(pid, result.address);
@@ -186,22 +180,22 @@ int terminal(char *argv[]) {
         if (tracee_status == not_running) {
           printf(CYN "[!] Can't disassemble here!\n");
         } else {
-          disas(pid, 0x30, regs.rip, fd, eh64, sh_tbl, regs.rip, raw_file);
+          disas(pid, 0x30, regs.rip, fd, eh, sh_tbl, regs.rip, raw_file);
         }
       } else {
         number = strtoul(amount, &ptr, 16);
         if (number == 0) {
           sscanf(temp, "%s %s", argument, amount);
-          result = search_funcs64(fd, eh64, sh_tbl, amount);
+          result = search_funcs64(fd, eh, sh_tbl, amount);
           if (result.size != 0) {
             printf(RESET CYN "Disassembly of %s\n", amount);
-            disas(pid, result.size, result.address, fd, eh64, sh_tbl, regs.rip,
+            disas(pid, result.size, result.address, fd, eh, sh_tbl, regs.rip,
                   raw_file);
           } else {
             printf(CYN "[!] Invalid address/function.\n");
           }
         } else {
-          disas(pid, 0x80, number, fd, eh64, sh_tbl, regs.rip, raw_file);
+          disas(pid, 0x80, number, fd, eh, sh_tbl, regs.rip, raw_file);
         }
       }
       break;
@@ -211,40 +205,40 @@ int terminal(char *argv[]) {
         if (tracee_status == not_running) {
           printf(CYN "[!] Can't disassemble here!\n");
         } else {
-          hex(pid, 0x30, regs.rip, fd, eh64, sh_tbl, regs.rip, raw_file);
+          hex(pid, 0x30, regs.rip, fd, eh, sh_tbl, regs.rip, raw_file);
         }
       } else {
         number = strtoul(amount, &ptr, 16);
         if (number == 0) {
           sscanf(temp, "%s %s", argument, amount);
-          result = search_funcs64(fd, eh64, sh_tbl, amount);
+          result = search_funcs64(fd, eh, sh_tbl, amount);
           if (result.size != 0) {
             printf(RESET CYN "Hexdump of %s\n", amount);
-            hex(pid, result.size, result.address, fd, eh64, sh_tbl, regs.rip,
+            hex(pid, result.size, result.address, fd, eh, sh_tbl, regs.rip,
                 raw_file);
           } else {
             printf(CYN "[!] Invalid address/function.\n");
           }
         } else {
-          hex(pid, 0x80, number, fd, eh64, sh_tbl, regs.rip, raw_file);
+          hex(pid, 0x80, number, fd, eh, sh_tbl, regs.rip, raw_file);
         }
       }
       break;
 
     case HEADER:
-      print_elf_header64(eh64);
+      print_elf_header64(eh);
       break;
 
     case SYMBOLS: // Remove later pls.
-      print_symbols64(fd, eh64, sh_tbl);
+      print_symbols64(fd, eh, sh_tbl);
       break;
 
     case SECTIONS:
-      print_section_headers64(fd, eh64, sh_tbl);
+      print_section_headers64(fd, eh, sh_tbl);
       break;
 
     case FUNCTIONS:
-      print_funcs64(fd, eh64, sh_tbl);
+      print_funcs64(fd, eh, sh_tbl);
       break;
 
     case HELP:
