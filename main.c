@@ -227,10 +227,11 @@ int terminal(char *argv[]) {
       break;
 
     case SYMBOLS:
-      printf("[Regular Symbols]\n");
+      printf("\n[Regular Symbols]\n");
       print_syms_table64(fd, eh, sh_tbl);
       printf("\n[Dynamic Symbols]\n");
       print_dynsyms_table64(fd, eh, sh_tbl);
+      printf("\n");
       break;
 
     case SECTIONS:

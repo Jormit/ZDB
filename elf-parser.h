@@ -29,10 +29,7 @@ void read_section_header_table64(int32_t fd, Elf64_Ehdr eh,
 char *read_section64(int32_t fd, Elf64_Shdr sh);
 void print_section_headers64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]);
 
-// Symbol functions.
-void print_symbol_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
-                          uint32_t symbol_table);
-void print_symbols64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]);
+// Table Printing Functions
 void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]);
 void print_syms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]);
 void print_dynsyms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]);

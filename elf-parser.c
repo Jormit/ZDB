@@ -207,20 +207,14 @@ char *read_section64(int32_t fd, Elf64_Shdr sh) {
 }
 
 void print_section_headers64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
-  uint32_t i;
-  char *sh_str; /* section-header string-table is also a section. */
-
-  /* Read section-header string-table */
-  sh_str = read_section64(fd, sh_table[eh.e_shstrndx]);
-
+  char *sh_str = sh_str = read_section64(fd, sh_table[eh.e_shstrndx]);
   printf(CYN "load-addr  size       section\n");
-
-  for (i = 0; i < eh.e_shnum; i++) {
+  for (uint32_t i = 0; i < eh.e_shnum; i++) {
     printf(DGR "0x%08lx ", sh_table[i].sh_addr);
     printf(DGR "0x%08lx | ", sh_table[i].sh_size);
     printf(WHT "%s\t", (sh_str + sh_table[i].sh_name));
     printf("\n");
-  } /* end of section header table */
+  }
 }
 
 void print_rela_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
@@ -287,37 +281,6 @@ void print_dynsyms_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
         printf("0x%08lx ", dynsyms_tbl[i].st_value);
         printf("%s\n", (str_tbl + name_index));
        }
-  }
-}
-
-void print_symbol_table64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[],
-                          uint32_t symbol_table) {
-  char *str_tbl;
-  Elf64_Sym *sym_tbl;
-  uint32_t i, symbol_count;
-
-  sym_tbl = (Elf64_Sym *)read_section64(fd, sh_table[symbol_table]);
-
-  uint32_t str_tbl_ndx = sh_table[symbol_table].sh_link;
-  str_tbl = read_section64(fd, sh_table[str_tbl_ndx]);
-
-  symbol_count = (sh_table[symbol_table].sh_size / sizeof(Elf64_Sym));
-
-  for (i = 0; i < symbol_count; i++) {
-    if (ELF32_ST_TYPE(sym_tbl[i].st_info) == 0x3) {
-      continue;
-    }
-    printf("0x%08lx ", sym_tbl[i].st_value);
-    printf("%s\n", (str_tbl + sym_tbl[i].st_name));
-  }
-}
-
-void print_symbols64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[]) {
-  for (uint32_t i = 0; i < eh.e_shnum; i++) {
-    if (sh_table[i].sh_type == SHT_SYMTAB ||
-        sh_table[i].sh_type == SHT_DYNSYM) {
-      print_symbol_table64(fd, eh, sh_table, i);
-    }
   }
 }
 
