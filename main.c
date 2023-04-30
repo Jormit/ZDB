@@ -238,11 +238,10 @@ int terminal(char *argv[]) {
       break;
 
     case FUNCTIONS:
-      printf("\n[Regular Functions]\n");
+      printf("[Regular Functions]\n");
       print_syms_tables64(fd, eh, sh_tbl, STT_FUNC);
       printf("\n[Dynamic Functions]\n");
       print_dynsyms_tables64(fd, eh, sh_tbl, STT_FUNC);
-      printf("\n");
       break;
 
     case HELP:
@@ -250,9 +249,7 @@ int terminal(char *argv[]) {
       break;
 
     case RELA:
-      printf("\n");
       print_rela_tables64(fd, eh, sh_tbl, STT_NOTYPE);
-      printf("\n");
       break;
 
     case INVALID:
@@ -324,24 +321,22 @@ void print_banner() {
 }
 
 void print_help() {
-  printf(DGR "zdb - A simple 64 bit elf debugger.\n");
-  printf(GRN "Commands:\n");
-  printf(GRN "r" DGR "                 - starts/restarts execution.\n");
+  printf(GRN "r" WHT "                 - starts/restarts execution.\n");
   printf(GRN
-         "c" DGR
+         "c" WHT
          "                 - continues execution until end or breakpoint.\n");
-  printf(GRN "b [addr/func]" DGR "     - sets break at specified address.\n");
-  printf(GRN "breaks" DGR "            - shows set breakpoints.\n");
-  printf(GRN "stack [amount]" DGR
+  printf(GRN "b [addr/func]" WHT "     - sets break at specified address.\n");
+  printf(GRN "breaks" WHT "            - shows set breakpoints.\n");
+  printf(GRN "stack [amount]" WHT
              "    - displays stackdump of [amount] length.\n");
-  printf(GRN "regs" DGR "              - displays register values.\n");
-  printf(GRN "sect" DGR "              - displays elf sections.\n");
-  printf(GRN "func" DGR "              - displays binary functions.\n");
-  printf(GRN "disas [func/addr]" DGR
+  printf(GRN "regs" WHT "              - displays register values.\n");
+  printf(GRN "sect" WHT "              - displays elf sections.\n");
+  printf(GRN "func" WHT "              - displays binary functions.\n");
+  printf(GRN "disas [func/addr]" WHT
              " - displays disassembly of specified area.\n");
-  printf(GRN "hex [func/addr]" DGR
+  printf(GRN "hex [func/addr]" WHT
              "   - displays hexdump of specified area.\n");
-  printf(GRN "q" DGR "                 - quits program.\n");
+  printf(GRN "q" WHT "                 - quits program.\n");
   return;
 }
 

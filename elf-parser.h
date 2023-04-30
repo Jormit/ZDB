@@ -3,14 +3,6 @@
 #include <elf.h>
 #include <stdbool.h>
 
-#define DEBUG 1
-
-#define debug(...)                                                             \
-  do {                                                                         \
-    if (DEBUG)                                                                 \
-      printf("<debug>:"__VA_ARGS__);                                           \
-  } while (0)
-
 struct search_result {
   Elf64_Addr address;
   uint64_t size;

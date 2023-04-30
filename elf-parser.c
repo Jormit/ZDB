@@ -28,7 +28,7 @@ bool is_ELF64(Elf64_Ehdr eh) {
 void print_elf_header64(Elf64_Ehdr elf_header) {
 
   /* Storage capacity class */
-  printf("Storage class\t= ");
+  printf(GRN "Storage class\t= " WHT);
   switch (elf_header.e_ident[EI_CLASS]) {
   case ELFCLASS32:
     printf("32-bit objects\n");
@@ -44,7 +44,7 @@ void print_elf_header64(Elf64_Ehdr elf_header) {
   }
 
   /* Data Format */
-  printf("Data format\t= ");
+  printf(GRN "Data format\t= " WHT);
   switch (elf_header.e_ident[EI_DATA]) {
   case ELFDATA2LSB:
     printf("2's complement, little endian\n");
@@ -60,7 +60,7 @@ void print_elf_header64(Elf64_Ehdr elf_header) {
   }
 
   /* OS ABI */
-  printf("OS ABI\t\t= ");
+  printf(GRN "OS ABI\t\t= " WHT);
   switch (elf_header.e_ident[EI_OSABI]) {
   case ELFOSABI_SYSV:
     printf("UNIX System V ABI\n");
@@ -124,7 +124,7 @@ void print_elf_header64(Elf64_Ehdr elf_header) {
   }
 
   /* ELF filetype */
-  printf("Filetype \t= ");
+  printf(GRN "Filetype \t= " WHT);
   switch (elf_header.e_type) {
   case ET_NONE:
     printf("N/A (0x0)\n");
@@ -147,7 +147,7 @@ void print_elf_header64(Elf64_Ehdr elf_header) {
   }
 
   /* ELF Machine-id */
-  printf("Machine\t\t= ");
+  printf(GRN "Machine\t\t= " WHT);
   switch (elf_header.e_machine) {
   case EM_NONE:
     printf("None (0x0)\n");
@@ -171,10 +171,10 @@ void print_elf_header64(Elf64_Ehdr elf_header) {
   }
 
   /* Entry point */
-  printf("Entry point\t= 0x%08lx\n", elf_header.e_entry);
+  printf(GRN "Entry point" WHT "\t= 0x%016lx\n", elf_header.e_entry);
 
   /* ELF header size in bytes */
-  printf("ELF header size\t= 0x%08x\n", elf_header.e_ehsize);
+  printf(GRN "ELF header size" WHT "\t= 0x%08x\n", elf_header.e_ehsize);
 }
 
 void read_section_header_table64(int32_t fd, Elf64_Ehdr eh,

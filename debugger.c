@@ -259,7 +259,6 @@ void unset_breakpoint(pid_t pid, long addr, long old_data) {
 
 // Printing functions.
 void print_registers(struct user_regs_struct *regs) {
-  printf("\n");
   printf(RED "rax" DGR "       %016llx\n", regs->rax);
   printf(RED "rbx" DGR "       %016llx\n", regs->rbx);
   printf(RED "rcx" DGR "       %016llx\n", regs->rcx);
@@ -277,22 +276,19 @@ void print_registers(struct user_regs_struct *regs) {
   printf(RED "r14" DGR "       %016llx\n", regs->r14);
   printf(RED "r15" DGR "       %016llx\n", regs->r15);
   printf(RED "rip" DGR "       %016llx\n", regs->rip);
-  printf("\n");
 }
 
 void print_stack(pid_t pid, long sp, long amount) {
-  printf("\n" CYN "address        contents\n");
+  printf(CYN "address        contents\n");
   long data = ptrace(PTRACE_PEEKTEXT, pid, (long *)sp, 0);
   printf(DGR "0x%lx " WHT " 0x%lx <-- $rsp\n", sp, data);
   for (int i = 1; i < amount; i++) {
     data = ptrace(PTRACE_PEEKTEXT, pid, (long *)sp + i, 0);
     printf(DGR "0x%lx " WHT " 0x%lx\n", sp + i * 8, data);
   }
-  printf("\n");
 }
 
 void print_all_breaks(struct head *bp_head) {
-
   struct breakpoint *curr = bp_head->list;
   int i = 1;
   while (curr != NULL) {
